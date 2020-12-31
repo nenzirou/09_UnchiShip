@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Pragma" content="no-cache">
+  <h1 style="margin:0;text-align: center;"> タイトル</h1>
+  <meta http-equiv="Cache-Control" content="no-cache">
+  <meta name="robots" content="noindex" />
+  <script src="dist/main.js"></script>
+  <script>
+    if (window == top.window) location.href = "index.html";
+  </script>
+  <style>
+    body,
+    input,
+    textarea,
+    select {
+      /* 入力欄にフォーカスが当たっても拡大しない */
+      font-size: 16px;
+      margin: 0;
+    }
+
+    body {
+      /* position: relative; */
+      top: 0px;
+      left: 0px;
+      user-select: none;
+    }
+
+    head {
+      outline: none;
+    }
+  </style>
+  <script>
+    window.focus(); //フォーカスをもってく
+  </script>
+</head>
+
+<body onclick="window.focus();">
+
+</body>
+
+</html>
