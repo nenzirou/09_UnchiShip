@@ -32,7 +32,7 @@ export class Ship extends PIXI.Container {
                 this.rooms[i].push(room);
             }
         }
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 2; i++) {
             let oji = new Ojisan(Math.random() * width, Math.random() * height);
             this.addChild(oji);
             this.ojis.push(oji);
