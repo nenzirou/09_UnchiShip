@@ -16,6 +16,7 @@ export class Room extends PIXI.Sprite {
     state: string = "STOP";
     constructor(x: number, y: number) {
         super();
+        this.zIndex = -1;
         this.x = x;// 部屋のｘ座標
         this.y = y;// 部屋のｙ座標
     }
