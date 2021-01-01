@@ -3,13 +3,8 @@ import { Room } from "./room";
 /*
 倉庫
 */
-type itemList = {
-    id: number;
-    num: number;
-}
+
 export class Room_warehouse extends Room {
-    kind: number = 4;
-    itemlist: itemList[];
     constructor(x: number, y: number, rNx: number, rNy: number) {
         super(x, y, rNx, rNy);
         this.id = "warehouse";

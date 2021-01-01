@@ -39,7 +39,7 @@ export class Ship extends PIXI.Container {
             }
         }
         // おじさん生成
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 200; i++) {
             let oji = new Ojisan(Math.random() * width, Math.random() * height);
             this.addChild(oji);
             this.ojis.push(oji);
@@ -54,7 +54,7 @@ export class Ship extends PIXI.Container {
             }
         }
         // アイテムを生成する
-        if (this.cnt % 60 == 0) {
+        if (this.cnt % 3 == 0) {
             let item = new Item(this.w, -100, 0, 'out');
             this.addChild(item);
             this.items.push(item);
@@ -65,6 +65,10 @@ export class Ship extends PIXI.Container {
         // アイテムの動作を行う
         for (let i = 0; i < this.items.length; i++) {
             this.items[i].move(this);
+            if (this.items[i].state === 'garbage') {
+                this.items.splice(i, 1);
+                i--;
+            }
         }
         // おじさんの動作を行う
         for (let i = 0; i < this.ojis.length; i++) {
