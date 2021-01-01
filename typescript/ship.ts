@@ -29,10 +29,10 @@ export class Ship extends PIXI.Container {
         for (let i = 0; i < 12; i++) {
             for (let j = 0; j < 8; j++) {
                 let room: Room;
-                if (j == 4 && (i == 1 || i == 10)) {
-                    room = new Room_warehouse(50 * j, 50 * i, j, i);
+                if (j == 0 && (i == 1 || i == 10) || j == 7 && (i == 1 || i == 10)) {
+                    room = new Room_warehouse(50 * j + 25, 50 * i + 25, j, i);
                 } else {
-                    room = new Room_aisle(50 * j, 50 * i, j, i);
+                    room = new Room_aisle(50 * j + 25, 50 * i + 25, j, i);
                 }
                 this.addChild(room);
                 this.rooms.push(room);
@@ -54,8 +54,8 @@ export class Ship extends PIXI.Container {
             }
         }
         // アイテムを生成する
-        if (this.cnt % 3 == 0) {
-            let item = new Item(this.w, -100, 0, 'out');
+        if (this.cnt % 1 == 0) {
+            let item = new Item(this.w, -100, Math.floor(Math.random() * 15) + 1, 'out');
             this.addChild(item);
             this.items.push(item);
         }

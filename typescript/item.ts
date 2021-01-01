@@ -19,8 +19,8 @@ export class Item extends PIXI.TilingSprite {
         this.y = y;
         this.anchor.set(0.5);
         this.id = id;
+        this.tilePosition.x = id * 32;
         this.state = state;
-        this.tilePosition.x = 32;
     }
     move(ship: Ship) {
         if (this.state === 'out') {
@@ -32,7 +32,7 @@ export class Item extends PIXI.TilingSprite {
                 this.y = Math.floor(Math.random() * (ship.h - this.height));
             }
         } else if (this.state === 'in') {
-            if (this.cnt % 100000 == 1 && ship.freeOjis.length != 0) {
+            if (this.cnt % 300 == 1 && ship.freeOjis.length != 0) {
                 let warehouse = this.findSameItemWarehouse(ship, this.id);
                 if (warehouse === undefined) warehouse = this.findEmptyWarehouse(ship);
                 // 倉庫が見つけられた時の処理
@@ -50,10 +50,10 @@ export class Item extends PIXI.TilingSprite {
                     let oji: Ojisan = ship.freeOjis[ojiN];
                     oji.state = 'transport';
                     oji.tl
-                        .to(oji, { duration: /*min / (0.2 * min + 15)*/1, x: this.x, y: this.y })
+                        .to(oji, { duration: /*min / (0.2 * min + 15)*/0.6, x: this.x, y: this.y })
                         .call(this.stick, [ship, this, oji])
-                        .to(oji, { duration: /*this.len(warehouse.x, warehouse.y) / (0.2 * this.len(warehouse.x, warehouse.y) + 15)*/1, x: warehouse.x, y: warehouse.y })
-                        .call(this.putItem, [warehouse, this,oji]);
+                        .to(oji, { duration: /*this.len(warehouse.x, warehouse.y) / (0.2 * this.len(warehouse.x, warehouse.y) + 15)*/0.6, x: warehouse.x, y: warehouse.y })
+                        .call(this.putItem, [warehouse, this, oji, ship]);
                     ship.freeOjis.splice(ojiN, 1);
                 }
             }
@@ -80,7 +80,7 @@ export class Item extends PIXI.TilingSprite {
         for (let i = 0; i < ship.rooms.length; i++) {
             if (ship.rooms[i].id === 'warehouse') {// 倉庫があった場合
                 for (let j = 0; j < ship.rooms[i].itemlist.length; j++) {// アイテムが格納できるかどうか調べる
-                    if (ship.rooms[i].itemlist[j].id === id) {
+                    if (ship.rooms[i].itemlist[j].id == id) {
                         warehouse = ship.rooms[i];
                         break;
                     }
@@ -102,10 +102,10 @@ export class Item extends PIXI.TilingSprite {
         return warehouse;
     }
     //アイテムを格納する関数
-    putItem(warehouse: Room_warehouse, item: Item,oji:Ojisan) {
+    putItem(warehouse: Room_warehouse, item: Item, oji: Ojisan, ship: Ship) {
         let ok = false;
         for (let i = 0; i < warehouse.itemlist.length; i++) {
-            if (warehouse.itemlist[i].id === item.id) {
+            if (warehouse.itemlist[i].id == item.id) {
                 warehouse.itemlist[i].num++;
                 ok = true;
                 item.removeItem();
@@ -113,15 +113,29 @@ export class Item extends PIXI.TilingSprite {
                 break;
             }
         }
-        if (!ok && warehouse.itemlist.length < warehouse.kind) {
-            warehouse.pushItemlist(item.id);
-            item.removeItem();
-            oji.state = 'free';
+        if (!ok) {
+            if (warehouse.itemlist.length < warehouse.kind) {
+                warehouse.pushItemlist(item.id);
+                item.removeItem();
+                oji.state = 'free';
+            } else {
+                item.popItem(ship, oji);
+            }
         }
     }
     // アイテムの削除
     removeItem() {
         this.parent.removeChild(this);
         this.state = 'garbage';
+    }
+    // アイテムを地面に落とす
+    popItem(ship: Ship, oji: Ojisan) {
+        this.scale.set(1);
+        this.state = 'in';
+        this.x = Math.floor(Math.random() * ship.w);
+        this.y = Math.floor(Math.random() * ship.h);
+        oji.removeChild(this);
+        ship.addChild(this);
+        oji.state = 'free';
     }
 }
