@@ -9,6 +9,7 @@ satiety:満腹度
 destiny:便意
 fatigue:疲労度
 */
+type stringOjiState = 'free' | 'transport';
 export class Ojisan extends PIXI.TilingSprite {
     background: PIXI.Graphics;
     id: number = 0;
@@ -17,10 +18,10 @@ export class Ojisan extends PIXI.TilingSprite {
     destiny: number = 0;
     fatigue: number = 0;
     level: number = 0;
-    state: string = "STOP";
+    state: stringOjiState = "free";
     cnt: number = 0;
     nextCnt: number = 0;
-    tl: TimelineLite;
+    tl: TimelineMax;
     constructor(x: number, y: number) {
         super(PIXI.Loader.shared.resources.oji.texture, 20, 40);
         this.anchor.set(0.5);
@@ -42,9 +43,11 @@ export class Ojisan extends PIXI.TilingSprite {
             this.tilePosition.x = this.tilePosition.x % 60;
         }
         // 停止状態の動き
-        if (this.cnt % 300 == this.nextCnt) {
-            this.tl.to(this, { during: 2, x: this.x + Math.round(Math.random() * 30) - 15, y: this.y + Math.round(Math.random() * 30) - 15 });
-            this.nextCnt = Math.floor(Math.random() * 150 + 150);
+        if (this.state === 'free') {
+            // if (this.cnt % 300 == this.nextCnt) {
+            //     this.tl.to(this, { duration: 0.5, x: this.x + Math.round(Math.random() * 30) - 15, y: this.y + Math.round(Math.random() * 30) - 15 });
+            //     this.nextCnt = Math.floor(Math.random() * 150 + 150);
+            // }
         }
         this.cnt++;
     }

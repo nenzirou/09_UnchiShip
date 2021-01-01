@@ -11,12 +11,16 @@ roomに持たせる機能
 */
 export class Room extends PIXI.Sprite {
     background: PIXI.Graphics;
-    id: number = 0;
+    id: string;
     level: number = 0;
     state: string = "STOP";
-    constructor(x: number, y: number) {
+    rNx: number;
+    rNy: number;
+    constructor(x: number, y: number, rNx: number, rNy: number) {
         super();
         this.zIndex = -1;
+        this.rNx = rNx;
+        this.rNy = rNy;
         this.x = x;// 部屋のｘ座標
         this.y = y;// 部屋のｙ座標
     }
