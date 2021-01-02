@@ -27,8 +27,11 @@ app.renderer.backgroundColor = 0x333333;
 
 // ゲームで使用する画像をあらかじめ読み込んでおく(プリロードという)
 // v5.3.2　だと PIXI.Loader.shared.addでプリロードする
-const sound = { hit: "sound/hit.mp3" };
-const image = { oji: "image/oji.png", window: "image/window.png", item: "image/food.png", box: "image/box.png", room_wall: "image/room_wall.png", room_aisle: "image/room_aisle.png" };
+const sound = { hit: "sound/hit.mp3",open: "sound/open.mp3",close: "sound/close.mp3" };
+const image = {
+    oji: "image/oji.png", window: "image/window.png", item: "image/food.png", box: "image/box.png", room_wall: "image/room_wall.png", room_aisle: "image/room_aisle.png",
+    room_bed: "image/room_bed.png"
+};
 Object.keys(sound).forEach(key => PIXI.Loader.shared.add(key, sound[key]));
 Object.keys(image).forEach(key => PIXI.Loader.shared.add(key, image[key]));
 
@@ -55,7 +58,7 @@ PIXI.Loader.shared.load((loader, resources) => {
         // ゲームシーンを画面に追加
         app.stage.addChild(gameScene);
 
-        const ship = new Ship(0, 0, 400, 600, gameScene);
+        const ship = new Ship(0, 0, 400, 500, gameScene);
         gameScene.addChild(ship);
 
         // const text = new PIXI.Text("SCORE:0", textStyle); //スコア表示テキスト

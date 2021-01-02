@@ -122,10 +122,10 @@ export class Item extends PIXI.TilingSprite {
             }
         }
         oji.tl.clear();
+        PIXI.Loader.shared.resources.close.sound.play();
     }
     // アイテムの削除
     removeItem() {
-        this.parent.removeChild(this);
         this.state = 'garbage';
     }
     // アイテムを地面に落とす

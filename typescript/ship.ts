@@ -3,9 +3,9 @@ import { Room } from "./room";
 import { Room_wall } from "./room_wall";
 import { Room_aisle } from "./room_aisle";
 import { Room_warehouse } from "./room_warehouse";
+import { Room_bed } from "./room_bed";
 import { Ojisan } from "./ojisan";
 import { Item } from "./item";
-import gsap from "gsap";
 /*
 shipに持たせる機能
 船の全体像
@@ -35,6 +35,8 @@ export class Ship extends PIXI.Container {
                 let room: Room;
                 if (j == 0 && (i == 1 || i == 10) || j == 7 && (i == 1 || i == 10)) {
                     room = new Room_warehouse(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
+                } else if(j==4&&i==5) {
+                    room = new Room_bed(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
                 } else {
                     room = new Room_wall(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
                 }
@@ -76,13 +78,14 @@ export class Ship extends PIXI.Container {
         for (let i = 0; i < this.items.length; i++) {
             this.items[i].move(this);
             if (this.items[i].state === 'garbage') {
+                this.items[i].parent.removeChild(this.items[i]);
                 this.items.splice(i, 1);
                 i--;
             }
         }
         // ステージの動作を行う
         for (let i = 0; i < this.rooms.length; i++){
-            this.rooms[i].move();
+            this.rooms[i].move(this);
         }
         // おじさんの動作を行う
         for (let i = 0; i < this.ojis.length; i++) {
