@@ -6,7 +6,6 @@ import { Room } from "./room";
 /*
 itemに持たせる機能
 id
-
 */
 type stringInOut = 'in' | 'out' | 'transport' | 'garbage';
 export class Item extends PIXI.TilingSprite {
@@ -51,13 +50,13 @@ export class Item extends PIXI.TilingSprite {
                     }
                     let oji: Ojisan = ship.freeOjis[ojiN];
                     ship.freeOjis.splice(ojiN, 1);
+                    this.state = 'transport';
                     oji.state = 'transport';
                     oji.tl
-                        .to(oji, { duration: /*min / (0.2 * min + 15)*/0.5, x: this.x, y: this.y })
+                        .to(oji, { duration: min / (0.2 * min + 15), x: this.x, y: this.y })
                         .call(this.stick, [ship, this, oji])
-                        .to(oji, { duration: /*this.len(warehouse.x, warehouse.y) / (0.2 * this.len(warehouse.x, warehouse.y) + 15)*/0.5, x: warehouse.x, y: warehouse.y })
+                        .to(oji, { duration: this.len(warehouse.x, warehouse.y) / (0.2 * this.len(warehouse.x, warehouse.y) + 15), x: warehouse.x, y: warehouse.y })
                         .call(this.putItem, [warehouse, this, oji, ship]);
-                    console.log(oji.tl);
                 }
             }
         }
@@ -111,7 +110,6 @@ export class Item extends PIXI.TilingSprite {
                 warehouse.itemlist[i].num++;
                 ok = true;
                 item.removeItem();
-                console.log("a");
                 break;
             }
         }
@@ -119,7 +117,6 @@ export class Item extends PIXI.TilingSprite {
             if (warehouse.itemlist.length < warehouse.kind) {
                 warehouse.pushItemlist(item.id);
                 item.removeItem();
-                console.log("b");
             } else {
                 item.popItem(ship, oji);
             }

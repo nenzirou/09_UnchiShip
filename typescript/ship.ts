@@ -30,25 +30,25 @@ export class Ship extends PIXI.Container {
         this.gamescene = gamescene;
         this.sortableChildren = true;
         // 船の部屋生成
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 10; i++) {
             for (let j = 0; j < 8; j++) {
                 let room: Room;
                 if (j == 0 && (i == 1 || i == 10) || j == 7 && (i == 1 || i == 10)) {
                     room = new Room_warehouse(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
                 } else {
-                    room = new Room_warehouse(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
+                    room = new Room_wall(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
                 }
                 this.addChild(room);
                 this.rooms.push(room);
             }
         }
         // おじさん生成
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 50; i++) {
             let oji = new Ojisan(Math.random() * width, Math.random() * height);
             this.addChild(oji);
             this.ojis.push(oji);
         }
-        this.scale.set(0.8, 0.8);
+        //this.scale.set(0.8, 0.8);
     }
     move() {
         //フリーなおじさんリストを作成する
@@ -64,14 +64,14 @@ export class Ship extends PIXI.Container {
             }
         }
         // アイテムを生成する
-        if (this.cnt % 1 == 0) {
+        if (this.cnt % 60 == 0) {
             let item = new Item(this.w, -100, Math.floor(Math.random() * 5) + 1, 'out');
             this.addChild(item);
             this.items.push(item);
         }
-        //this.scale.set(0.5 + this.cnt % 100 / 200, 0.5 + this.cnt % 100 / 200);
-        this.x = Math.sin(this.cnt / 300) * 20 + 20;
-        this.y = Math.cos(this.cnt / 300) * 20 + 20;
+        //this.scale.set(0.5 + this.cnt % 500 / 1000, 0.5 + this.cnt % 500 / 1000);
+        //this.x = Math.sin(this.cnt / 300) * 20 + 20;
+        //this.y = Math.cos(this.cnt / 300) * 20 + 20;
         // アイテムの動作を行う
         for (let i = 0; i < this.items.length; i++) {
             this.items[i].move(this);
@@ -88,7 +88,6 @@ export class Ship extends PIXI.Container {
         for (let i = 0; i < this.ojis.length; i++) {
             this.ojis[i].move(this);
         }
-        console.log(this.ojis[0].tl.duration());
         this.freeOjis = [];
         this.warehouses = [];
         this.cnt++;

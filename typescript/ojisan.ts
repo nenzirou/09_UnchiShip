@@ -44,9 +44,15 @@ export class Ojisan extends PIXI.TilingSprite {
         }
         // 停止状態の動き
         if (this.state === 'free') {
+            // 自由移動
             if (this.cnt % 300 == this.nextCnt) {
                 this.tl.to(this, { duration: 0.5, x: this.x + Math.round(Math.random() * 30) - 15, y: this.y + Math.round(Math.random() * 30) - 15 });
                 this.nextCnt = Math.floor(Math.random() * 150 + 150);
+            }
+            // 疲労蓄積
+            if (this.cnt % 300 == 0) {
+                this.fatigue++;
+                if (this.fatigue > 100) this.fatigue = 100;
             }
         }
         this.cnt++;
