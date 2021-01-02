@@ -45,7 +45,7 @@ export class Ship extends PIXI.Container {
             }
         }
         // おじさん生成
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 200; i++) {
             let oji = new Ojisan(Math.random() * width, Math.random() * height);
             this.addChild(oji);
             this.ojis.push(oji);
@@ -53,6 +53,10 @@ export class Ship extends PIXI.Container {
         //this.scale.set(0.8, 0.8);
     }
     move() {
+        //デバッグ用
+        if (this.cnt % 60 == 0) {
+            //console.log(this.rooms[4].ojiID);
+        }
         //フリーなおじさんリストを作成する
         for (let i = 0; i < this.ojis.length; i++) {
             if (this.ojis[i].state === 'free') {
@@ -66,8 +70,8 @@ export class Ship extends PIXI.Container {
             }
         }
         // アイテムを生成する
-        if (this.cnt % 300 == 0) {
-            let item = new Item(this.w, -100, Math.floor(Math.random() * 5) + 1, 'out');
+        if (this.cnt % 20 == 0) {
+            let item = new Item(this.w, -100,0, 'out');
             this.addChild(item);
             this.items.push(item);
         }

@@ -18,6 +18,8 @@ app.renderer.view.style.position = "relative";
 app.renderer.view.style.width = "400px";
 app.renderer.view.style.height = "600px";
 app.renderer.view.style.display = "block";
+//app.renderer.resolution = window.devicePixelRatio || 1;
+app.renderer.view.autofocus = true;
 
 // canvasの周りを点線枠で囲う (canvasの位置がわかりやすいので入れている)
 app.renderer.view.style.border = "2px dashed black";
@@ -29,7 +31,7 @@ app.renderer.backgroundColor = 0x333333;
 // v5.3.2　だと PIXI.Loader.shared.addでプリロードする
 const sound = { hit: "sound/hit.mp3",open: "sound/open.mp3",close: "sound/close.mp3" };
 const image = {
-    oji: "image/oji.png", window: "image/window.png", item: "image/food.png", box: "image/box.png", room_wall: "image/room_wall.png", room_aisle: "image/room_aisle.png",
+    oji: "image/oji.png", window: "image/window.png", item: "image/food.png",unchi: "image/うんち.png", box: "image/box.png", room_wall: "image/room_wall.png", room_aisle: "image/room_aisle.png",
     room_bed: "image/room_bed.png"
 };
 Object.keys(sound).forEach(key => PIXI.Loader.shared.add(key, sound[key]));

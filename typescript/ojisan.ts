@@ -2,7 +2,7 @@ import gsap from "gsap";
 import * as PIXI from "pixi.js";
 import { Ship } from "./ship";
 import { Room } from "./room";
-import { TextWindow } from "./window";
+import { SpeechWindow } from "./speech_window";
 /*
 おじさんに持たせる機能
 id:おじさんの識別子
@@ -19,18 +19,18 @@ export class Ojisan extends PIXI.TilingSprite {
     hp: number = 100;
     satiety: number = 100;
     destiny: number = 0;
-    fatigue: number = 90;
+    fatigue: number = Math.round(100 * Math.random());
     level: number = 0;
     state: stringOjiState = "free";
     cnt: number = 0;
     nextCnt: number = 0;
     tl: TimelineMax;
-    children: PIXI.TilingSprite[];
+    childs: PIXI.TilingSprite[]=[];
     room: Room;
-    speed: number = 1000;
-    window: TextWindow;
+    speed: number = 300 + Math.random()*20;
+    window: SpeechWindow;
     constructor(x: number, y: number) {
-        super(PIXI.Loader.shared.resources.oji.texture, 20, 40);
+        super(PIXI.Loader.shared.resources.oji.texture, 20, 32);
         this.anchor.set(0.5);
         this.x = x;// おじさんのｘ座標
         this.y = y;// おじさんのｙ座標
@@ -39,6 +39,16 @@ export class Ojisan extends PIXI.TilingSprite {
         this.tl = gsap.timeline();
         this.alpha = 0.8;
         this.zIndex = 1;
+        this.interactive = true;
+        this.buttonMode = true;
+        this.window = new SpeechWindow(0, 0, 1, 1, 1);
+        this.addChild(this.window);
+        this.window.visible = false;
+        this.on("pointerdown", () => {
+            //PIXI.Loader.shared.resources.close.sound.play();
+            this.window.visible = !this.window.visible;
+            this.window.position.set(0, -80);
+        })
     }
     move(ship: Ship) {
         // 船の境界設定
@@ -51,6 +61,7 @@ export class Ojisan extends PIXI.TilingSprite {
             this.tilePosition.x += 20;
             this.tilePosition.x = this.tilePosition.x % 60;
         }
+        this.window.setText('hp:' + this.hp+'\n疲労:'+this.fatigue+'\nid:'+this.id+'\n状態'+this.state);
         // 停止状態の動き
         if (this.state === 'free') {
             // 自由移動
@@ -88,9 +99,8 @@ export class Ojisan extends PIXI.TilingSprite {
                 }
             }
         } else if (this.state === 'sleeping') {
-            if (this.cnt % 5 == 0) {
+            if (this.cnt % 20 == 0) {
                 this.fatigue--;
-                console.log("すやすや");
             }
             if (this.fatigue < 0) {
                 this.fatigue = 0;

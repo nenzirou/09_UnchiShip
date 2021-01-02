@@ -3,18 +3,21 @@ import { Ship } from "./ship";
 import { Ojisan } from "./ojisan";
 import { Room_warehouse } from "./room_warehouse";
 import { Room } from "./room";
+import gsap from "gsap";
 /*
 itemに持たせる機能
 id
 */
-type stringInOut = 'in' | 'out' | 'transport' | 'garbage';
+type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage';
 export class Item extends PIXI.TilingSprite {
     cnt: number = 0;
     id: number = 0;
     state: stringInOut = 'in';
     max: number = 99;
+    tl: TimelineMax;
+    static size: number = 0.6;
     constructor(x: number, y: number, id: number, state: stringInOut) {
-        super(PIXI.Loader.shared.resources.item.texture, 32, 32);
+        super(PIXI.Loader.shared.resources.unchi.texture, 32, 32);
         this.x = x;
         this.y = y;
         this.anchor.set(0.5);
@@ -22,6 +25,7 @@ export class Item extends PIXI.TilingSprite {
         this.tilePosition.x = (id % 16 * 32);
         this.tilePosition.y = Math.floor(id / 16) * 32;
         this.state = state;
+        this.tl = gsap.timeline();
     }
     move(ship: Ship) {
         if (this.state === 'out') {
@@ -31,6 +35,7 @@ export class Item extends PIXI.TilingSprite {
                 this.cnt = 0;
                 this.x = Math.floor(Math.random() * (ship.w - this.width));
                 this.y = Math.floor(Math.random() * (ship.h - this.height));
+                this.tl.from(this.scale, { duration: 0.2, x: 0.1, y: 0.1, ease: 'back.out(10)' });
             }
         } else if (this.state === 'in') {
             if (this.cnt % 300 == 1 && ship.freeOjis.length != 0) {
@@ -50,7 +55,7 @@ export class Item extends PIXI.TilingSprite {
                     }
                     let oji: Ojisan = ship.freeOjis[ojiN];
                     ship.freeOjis.splice(ojiN, 1);
-                    this.state = 'transport';
+                    this.state = 'reserved';
                     oji.state = 'transport';
                     oji.tl.clear();
                     oji.tl
@@ -60,6 +65,11 @@ export class Item extends PIXI.TilingSprite {
                         .call(this.putItem, [warehouse, this, oji, ship]);
                 }
             }
+        } else if (this.state === 'transporting') {
+            this.scale.set(Item.size);
+        }
+        if (this.cnt > 60 * 60 && this.state === 'in') {
+            this.state = 'garbage';
         }
         this.cnt++;
     }
@@ -73,8 +83,8 @@ export class Item extends PIXI.TilingSprite {
         oji.addChild(item);
         item.x = 0;
         item.y = 0;
-        item.state = "transport";
-        item.scale.set(0.8);
+        item.state = "transporting";
+        item.scale.set(Item.size);
     }
     // 指定したidと同じアイテムが格納されていて且つその空きがある倉庫を探す
     findSameItemWarehouse(ship: Ship, id: number) {

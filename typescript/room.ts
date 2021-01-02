@@ -61,8 +61,8 @@ export abstract class Room extends PIXI.TilingSprite {
         return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
     }
     static stickItemToOji(oji: Ojisan, id: number) {
-        let item = new Item(0, 0, id, 'transport');
-        item.scale.set(0.8);
+        let item = new Item(0, 0, id, 'transporting');
+        item.scale.set(Item.size);
         oji.addChild(item);
         oji.children.push(item);
     }
@@ -74,10 +74,10 @@ export abstract class Room extends PIXI.TilingSprite {
     static freeOji(oji: Ojisan) {
         oji.tl.clear();
         oji.state = 'free';
-        for (let i = 0; i < oji.children.length; i++) {
-            oji.removeChild(oji.children[i]);
+        for (let i = 0; i < oji.childs.length; i++) {
+            oji.removeChild(oji.childs[i]);
         }
-        oji.children = [];
+        oji.childs = [];
     }
     gatherItem(ship: Ship, id: number) {
         if (ship.freeOjis.length == 0) return;

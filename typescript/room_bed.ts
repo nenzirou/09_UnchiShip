@@ -16,6 +16,12 @@ export class Room_bed extends Room {
         if (this.ojiID.length < this.ojiMax) {
             this.state = 'free';
         }
+        // アニメーション
+        this.tilePosition.y = -this.ojiID.length * 50;
+        if (this.cnt % 60 == 0) {
+            this.tilePosition.x = (this.tilePosition.x + 50) % 100;
+        }
+
         this.cnt++;
     }
 }
