@@ -35,7 +35,7 @@ export class Ship extends PIXI.Container {
                 let room: Room;
                 if (j == 0 && (i == 1 || i == 10) || j == 7 && (i == 1 || i == 10)) {
                     room = new Room_warehouse(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
-                } else if(j==4&&i==5) {
+                } else if(j==4) {
                     room = new Room_bed(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
                 } else {
                     room = new Room_aisle(50 * j + 25, 50 * i + 25, j, i,this.gamescene);

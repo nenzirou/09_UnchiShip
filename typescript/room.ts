@@ -17,18 +17,21 @@ interface itemList {
     id: number;
     num: number;
 }
+type stringRoomState = 'free' | 'using';
 export abstract class Room extends PIXI.TilingSprite {
-    window: TextWindow;
-    reinforceWindow: TextWindow;
-    back: PIXI.Container;
+    window: TextWindow;//テキストウィンドウ
+    reinforceWindow: TextWindow;//強化ウィンドウ
+    back: PIXI.Container;//ウィンドウの戻るボタン
     kind: number = 4;// 倉庫のアイテムを入れられる種類
-    itemlist: itemList[] = [];
+    itemlist: itemList[] = [];//この部屋に格納されているアイテムリスト
     id: string;
     level: number = 0;
-    state: string = "STOP";
+    state: stringRoomState = "free";
     rNx: number;// 行番号
     rNy: number;// 列番号
-    cnt: number=0;
+    cnt: number = 0;// タイムカウント
+    ojiID: number[] = [];//この部屋にいるおじさんのIDリスト
+    ojiMax: number = 4;// おじさんを入れられる最大数
     constructor(x: number, y: number, rNx: number, rNy: number, texture: PIXI.Texture, gamescene: PIXI.Container) {
         super(texture, 50, 50);
         this.zIndex = -1;
@@ -63,15 +66,15 @@ export abstract class Room extends PIXI.TilingSprite {
         oji.addChild(item);
         oji.children.push(item);
     }
-    static exsistItem(room:Room,id:number) {
-        for (let i = 0; i < room.itemlist.length; i++){
-            if (room.itemlist[i].id == id&&room.itemlist[i].num>0) return room.itemlist[i];
+    static exsistItem(room: Room, id: number) {
+        for (let i = 0; i < room.itemlist.length; i++) {
+            if (room.itemlist[i].id == id && room.itemlist[i].num > 0) return room.itemlist[i];
         }
     }
-    static freeOji(oji:Ojisan) {
+    static freeOji(oji: Ojisan) {
         oji.tl.clear();
         oji.state = 'free';
-        for (let i = 0; i < oji.children.length; i++){
+        for (let i = 0; i < oji.children.length; i++) {
             oji.removeChild(oji.children[i]);
         }
         oji.children = [];
@@ -87,7 +90,7 @@ export abstract class Room extends PIXI.TilingSprite {
         let ojiToWarehouse = Room.len(oji.x, oji.y, warehouse.x, warehouse.y);
         let warehouseToRoom = Room.len(this.x, this.y, warehouse.x, warehouse.y);
         oji.tl
-            .to(oji, { duration: ojiToWarehouse / (0.2 * ojiToWarehouse + 15), x: warehouse.x, y: warehouse.y })
+            .to(oji, { duration: ojiToWarehouse / oji.speed, x: warehouse.x, y: warehouse.y })
             .call(() => {
                 let itemlist: itemList = Room.exsistItem(warehouse, id);
                 if (itemlist !== undefined) {
@@ -98,7 +101,7 @@ export abstract class Room extends PIXI.TilingSprite {
                     Room.freeOji(oji);
                 }
             })
-            .to(oji, { duration: warehouseToRoom/ (0.2 * warehouseToRoom + 15), x: this.x, y: this.y })
+            .to(oji, { duration: warehouseToRoom / oji.speed, x: this.x, y: this.y })
             .call(() => {
                 this.pushItemlist(id);
                 Room.freeOji(oji);
@@ -108,7 +111,7 @@ export abstract class Room extends PIXI.TilingSprite {
         let warehouse: Room;
         for (let i = 0; i < ship.warehouses.length; i++) {
             for (let j = 0; j < ship.warehouses[i].itemlist.length; j++) {
-                if (ship.warehouses[i].itemlist[j].id == id&&ship.warehouses[i].itemlist[i].num>0) {
+                if (ship.warehouses[i].itemlist[j].id == id && ship.warehouses[i].itemlist[i].num > 0) {
                     warehouse = ship.warehouses[i];
                     break;
                 }
@@ -117,5 +120,19 @@ export abstract class Room extends PIXI.TilingSprite {
         }
         return warehouse;
     }
-    abstract move(ship:Ship);
+    static findRoom(ship: Ship, id: string, state: stringRoomState) {
+        for (let i = 0; i < ship.rooms.length; i++) {
+            if (ship.rooms[i].id === id && ship.rooms[i].state === state) {
+                return ship.rooms[i];
+            }
+        }
+    }
+    static removeOjiFromRoom(oji:Ojisan,room:Room) {
+        for (let i = 0; i < room.ojiID.length; i++){
+            if (room.ojiID[i] == oji.id) {
+                room.ojiID.splice(i, 1);
+            }
+        }
+    }
+    abstract move(ship: Ship);
 }

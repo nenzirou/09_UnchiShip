@@ -54,9 +54,9 @@ export class Item extends PIXI.TilingSprite {
                     oji.state = 'transport';
                     oji.tl.clear();
                     oji.tl
-                        .to(oji, { duration: min / (0.2 * min + 15), x: this.x, y: this.y })
+                        .to(oji, { duration: min / oji.speed, x: this.x, y: this.y })
                         .call(this.stick, [ship, this, oji])
-                        .to(oji, { duration: this.len(warehouse.x, warehouse.y) / (0.2 * this.len(warehouse.x, warehouse.y) + 15), x: warehouse.x, y: warehouse.y })
+                        .to(oji, { duration: this.len(warehouse.x, warehouse.y) / oji.speed, x: warehouse.x, y: warehouse.y })
                         .call(this.putItem, [warehouse, this, oji, ship]);
                 }
             }

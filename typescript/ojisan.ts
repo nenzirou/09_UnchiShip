@@ -1,6 +1,8 @@
 import gsap from "gsap";
 import * as PIXI from "pixi.js";
 import { Ship } from "./ship";
+import { Room } from "./room";
+import { TextWindow } from "./window";
 /*
 おじさんに持たせる機能
 id:おじさんの識別子
@@ -9,25 +11,31 @@ satiety:満腹度
 destiny:便意
 fatigue:疲労度
 */
-type stringOjiState = 'free' | 'transport';
+type stringOjiState = 'free' | 'transport' | 'moving' | 'sleeping';
 export class Ojisan extends PIXI.TilingSprite {
     background: PIXI.Graphics;
+    static ID = 0;
     id: number = 0;
-    hp: number = 1;
+    hp: number = 100;
     satiety: number = 100;
     destiny: number = 0;
-    fatigue: number = 0;
+    fatigue: number = 90;
     level: number = 0;
     state: stringOjiState = "free";
     cnt: number = 0;
     nextCnt: number = 0;
     tl: TimelineMax;
     children: PIXI.TilingSprite[];
+    room: Room;
+    speed: number = 1000;
+    window: TextWindow;
     constructor(x: number, y: number) {
         super(PIXI.Loader.shared.resources.oji.texture, 20, 40);
         this.anchor.set(0.5);
         this.x = x;// おじさんのｘ座標
         this.y = y;// おじさんのｙ座標
+        Ojisan.ID++;
+        this.id = Ojisan.ID;
         this.tl = gsap.timeline();
         this.alpha = 0.8;
         this.zIndex = 1;
@@ -57,6 +65,39 @@ export class Ojisan extends PIXI.TilingSprite {
                 if (this.fatigue == 100) {
                     this.hp--;
                 }
+            }
+            // 就寝
+            if (this.fatigue > 90) {
+                let bed: Room = Room.findRoom(ship, 'bed', 'free');
+                if (bed !== undefined) {
+                    let ojiToBed = Room.len(this.x, this.y, bed.x, bed.y);
+                    this.state = 'moving';
+                    this.tl
+                        .to(this, { duration: ojiToBed / this.speed, x: bed.x, y: bed.y })
+                        .call(() => {
+                            if (bed.ojiID.length < bed.ojiMax) {
+                                this.visible = false;
+                                this.state = 'sleeping';
+                                this.room = bed;
+                                bed.ojiID.push(this.id);
+                            } else {
+                                bed.state = 'using';
+                                Room.freeOji(this);
+                            }
+                        })
+                }
+            }
+        } else if (this.state === 'sleeping') {
+            if (this.cnt % 5 == 0) {
+                this.fatigue--;
+                console.log("すやすや");
+            }
+            if (this.fatigue < 0) {
+                this.fatigue = 0;
+                this.visible = true;
+                Room.freeOji(this);
+                Room.removeOjiFromRoom(this, this.room);
+                this.room = null;
             }
         }
         this.cnt++;
