@@ -52,6 +52,7 @@ export class Item extends PIXI.TilingSprite {
                     ship.freeOjis.splice(ojiN, 1);
                     this.state = 'transport';
                     oji.state = 'transport';
+                    oji.tl.clear();
                     oji.tl
                         .to(oji, { duration: min / (0.2 * min + 15), x: this.x, y: this.y })
                         .call(this.stick, [ship, this, oji])

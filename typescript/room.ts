@@ -21,7 +21,7 @@ export abstract class Room extends PIXI.TilingSprite {
     window: TextWindow;
     reinforceWindow: TextWindow;
     back: PIXI.Container;
-    kind: number = 10;// 倉庫のアイテムを入れられる種類
+    kind: number = 4;// 倉庫のアイテムを入れられる種類
     itemlist: itemList[] = [];
     id: string;
     level: number = 0;

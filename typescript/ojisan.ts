@@ -13,7 +13,7 @@ type stringOjiState = 'free' | 'transport';
 export class Ojisan extends PIXI.TilingSprite {
     background: PIXI.Graphics;
     id: number = 0;
-    hp: number = 100;
+    hp: number = 1;
     satiety: number = 100;
     destiny: number = 0;
     fatigue: number = 0;
@@ -51,9 +51,12 @@ export class Ojisan extends PIXI.TilingSprite {
                 this.nextCnt = Math.floor(Math.random() * 150 + 150);
             }
             // 疲労蓄積
-            if (this.cnt % 300 == 0) {
+            if (this.cnt % 300 == 299) {
                 this.fatigue++;
                 if (this.fatigue > 100) this.fatigue = 100;
+                if (this.fatigue == 100) {
+                    this.hp--;
+                }
             }
         }
         this.cnt++;

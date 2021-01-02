@@ -10,7 +10,6 @@ export class Room_aisle extends Room {
         this.id = "aisle";
         this.x = x;// 部屋のｘ座標
         this.y = y;// 部屋のｙ座標
-        this.alpha = Math.random();
     }
     move(ship:Ship) {
 
