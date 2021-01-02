@@ -5,7 +5,7 @@ import * as PIXI from "pixi.js";
  * @param width 横幅
  * @param height 縦幅
  */
-export function createButton(text: string, width: number, height: number, x: number, y: number, color: number, onClick: () => void) {
+export function createButton(text: string, width: number, height: number, x: number, y: number, z: number, color: number, onClick: () => void) {
     const fontSize = 20; // フォントサイズ
     const buttonAlpha = 0.6; // ボタン背景の透明度
     const buttonContainer = new PIXI.Container(); // ボタンコンテナ（ここにテキストと背景色を追加して返り値とする）
@@ -17,6 +17,8 @@ export function createButton(text: string, width: number, height: number, x: num
     backColor.endFill(); // 描画完了
     backColor.interactive = true; // クリック可能にする
     backColor.on("pointerdown", onClick); // クリック時にonClickの関数を実行する
+    backColor.zIndex = z;
+    backColor.buttonMode = true;
     buttonContainer.addChild(backColor); // 背景をボタンコンテナに追加
 
     // テキストに関するパラメータを定義する(ここで定義した意外にもたくさんパラメータがある)

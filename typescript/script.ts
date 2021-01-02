@@ -1,7 +1,6 @@
 import * as PIXI from "pixi.js"; // node_modulesから PIXI.jsをインポート
 import * as PIXI_SOUND from "pixi-sound";// node_modulesから PIXI_SOUNDをインポート
 import { SceneManager } from "./scene_manager"; // シーン管理を行うクラスをインポート
-import { createButton } from "./create_button"; // ボタン生成関数をインポート
 import { Ship } from "./ship"; // ボタン生成関数をインポート
 
 // PIXI_SOUNDを有効にするためには必ずこの初期化命令を実行すること
@@ -29,7 +28,7 @@ app.renderer.backgroundColor = 0x333333;
 // ゲームで使用する画像をあらかじめ読み込んでおく(プリロードという)
 // v5.3.2　だと PIXI.Loader.shared.addでプリロードする
 const sound = { hit: "sound/hit.mp3" };
-const image = { oji: "image/oji.png", item: "image/food.png", box: "image/box.png", room_wall: "image/room_wall.png", room_aisle: "image/room_aisle.png" };
+const image = { oji: "image/oji.png", window: "image/window.png", item: "image/food.png", box: "image/box.png", room_wall: "image/room_wall.png", room_aisle: "image/room_aisle.png" };
 Object.keys(sound).forEach(key => PIXI.Loader.shared.add(key, sound[key]));
 Object.keys(image).forEach(key => PIXI.Loader.shared.add(key, image[key]));
 
@@ -52,29 +51,12 @@ PIXI.Loader.shared.load((loader, resources) => {
 
         // ゲーム用のシーンを生成
         const gameScene = new PIXI.Container();
+        gameScene.sortableChildren = true;
         // ゲームシーンを画面に追加
         app.stage.addChild(gameScene);
 
-        // ボール画像を表示するスプライトオブジェクトを実体化させる
-        // const ball = new PIXI.Sprite(resources["image/background1.png"].texture); //引数には、プリロードしたURLを追加する
-        // ball.x = 200; // x座標
-        // ball.y = 500; // y座標
-        // ball.interactive = true; // クリック可能にする
-        // ball.on("pointerdown", () =>      // クリック時に発動する関数
-        // {
-        //     resources["sound/hit.mp3"].sound.play(); // クリックで音が鳴る
-        // });
-        // gameScene.addChild(ball); // ボールをシーンに追加
-        const ship = new Ship(0, 0, 400, 600);
+        const ship = new Ship(0, 0, 400, 600, gameScene);
         gameScene.addChild(ship);
-        // テキストに関するパラメータを定義する(ここで定義した意外にもたくさんパラメータがある)
-        // const textStyle = new PIXI.TextStyle({
-        //     fontFamily: "Arial", // フォント
-        //     fontSize: 20,// フォントサイズ
-        //     fill: 0xffffff, // 色(16進数で定義するので#ffffffと書かずに0xffffffと書く)
-        //     dropShadow: true, // ドロップシャドウを有効にする（右下に影をつける）
-        //     dropShadowDistance: 2, // ドロップシャドウの影の距離
-        // });
 
         // const text = new PIXI.Text("SCORE:0", textStyle); //スコア表示テキスト
         // gameScene.addChild(text); // スコア表示テキストを画面に追加する
