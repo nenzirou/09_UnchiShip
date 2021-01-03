@@ -15,7 +15,7 @@ export class Room_work extends Room {
     makingItem: number = 0;
     needItems: number[] = [];
     makeCnt: number = 0;
-    static makableItems: number[] = [1, 2, 1, 2, 1, 2, 1, 2];
+    static makableItems: number[] = [1, 2, 3, 4, 5];
     constructor(x: number, y: number, rNx: number, rNy: number, gamescene: PIXI.Container) {
         super(x, y, rNx, rNy, PIXI.Loader.shared.resources.room_work.texture, gamescene);
         this.id = "work";
@@ -88,12 +88,13 @@ export class Room_work extends Room {
             making.on("pointertap", () => {
                 if (this.state === 'free') {
                     PIXI.Loader.shared.resources.close.sound.play();
-                    this.childWindows[i].visible = false;
+                    this.childWindows[i].visible = false;//第２層のウィンドウを閉じる
                     this.state = 'gathering';//アイテム収集開始
-                    for (let i = 0; i < this.onlyDisplayItems.length; i++) {
-                        Item.changeItem(this.onlyDisplayItems[i], 0);
-                        this.makingItem = this.displayItems[i].id;
+                    for (let j = 0; j < this.onlyDisplayItems.length; j++) {
+                        Item.changeItem(this.onlyDisplayItems[j], 0);
                     }
+                    this.makingItem = this.displayItems[i].id;
+                    console.log(this.makingItem);
                     this.needItems = this.needItems.concat(Item.itemMakeList[this.makingItem]);//必要リストに素材を追加
                 }
             });
@@ -111,8 +112,9 @@ export class Room_work extends Room {
                     i--;
                 }
             }
-            //アイテム作成開始
+            //アイテムが揃ったらアイテム作成開始
             if (this.needItems.length == 0 && this.state === 'gathering') {
+
                 //近くのフリーおじさんを見つける
                 let oji = Room.findNearFreeOji(ship, this.x, this.y);
                 if (oji !== undefined) {
@@ -133,7 +135,7 @@ export class Room_work extends Room {
                     this.state = 'free';
                     Room.allFreeOji(ship.ojis, this.ojiID);
                     this.ojiID = [];
-                    ship.makeItem(ship, this.x, this.y, this.makingItem, 'in');
+                    ship.makeItem(ship, this.x, this.y, this.makingItem, 1, 'in');
                     this.makingItem = 0;
                 }
                 this.makeCnt--;

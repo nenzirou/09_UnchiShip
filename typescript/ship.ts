@@ -70,7 +70,7 @@ export class Ship extends PIXI.Container {
             }
         }
         // おじさん生成
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 100; i++) {
             let oji = new Ojisan(Math.random() * width, Math.random() * height);
             this.addChild(oji);
             this.ojis.push(oji);
@@ -82,11 +82,7 @@ export class Ship extends PIXI.Container {
         // });
         // this.addChild(buntton);
     }
-    move() {
-        //デバッグ用
-        if (this.cnt % 60 == 0) {
-            //console.log(this.rooms[4].ojiID);
-        }
+    move(app: PIXI.Application) {
         //フリーなおじさんリストを作成する
         for (let i = 0; i < this.ojis.length; i++) {
             if (this.ojis[i].state === 'free') {
@@ -101,7 +97,15 @@ export class Ship extends PIXI.Container {
         }
         // アイテムを生成する
         if (this.cnt % 100 == 0) {
-            this.makeItem(this, this.w, -100, Math.floor(Math.random() * 2) + 1, 'out');
+            this.makeItem(this, this.w, -100, Math.floor(Math.random() * 5) + 1, 12, 'out');
+        }
+        if (this.cnt == 0) {
+            this.makeItem(this, this.w, -100, 1, 105, 'out');
+            this.makeItem(this, this.w, -100, 1, 3, 'out');
+            this.makeItem(this, this.w, -100, 2, 3, 'out');
+            this.makeItem(this, this.w, -100, 2, 4, 'out');
+            this.makeItem(this, this.w, -100, 2, 5, 'out');
+            this.makeItem(this, this.w, -100, 5, 6, 'out');
         }
         //this.scale.set(0.5 + this.cnt % 500 / 1000, 0.5 + this.cnt % 500 / 1000);
         //this.x = Math.sin(this.cnt / 300) * 20 + 20;
@@ -128,12 +132,26 @@ export class Ship extends PIXI.Container {
                 i--;
             }
         }
+        //デバッグ用
+        if (this.cnt % 60 == 0) {
+            let cX = app.renderer.plugins.interaction.mouse.global.x;
+            let cY = app.renderer.plugins.interaction.mouse.global.y;
+            if (cX > 0 && cY > 0) {
+                for (let i = 0; i < this.freeOjis.length; i++) {
+                    if (this.freeOjis[i].state === 'free') {
+                        this.freeOjis[i].tl.clear();
+                        this.freeOjis[i].tl.to(this.freeOjis[i], { duration: 1, x: cX, y: cY });
+                    }
+                }
+            }
+        }
         this.freeOjis = [];
         this.warehouses = [];
         this.cnt++;
     }
-    makeItem(ship: Ship, x: number, y: number, id: number, state) {
-        let item = new Item(x, y, id, state);
+    makeItem(ship: Ship, x: number, y: number, id: number, num: number, state) {
+        let item = new Item(x, y, id, num, state);
+        if (item.num > item.max) item.num = item.max;
         ship.addChild(item);
         ship.items.push(item);
     }

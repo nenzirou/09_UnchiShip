@@ -74,7 +74,7 @@ PIXI.Loader.shared.load((loader, resources) => {
 
         function gameLoop() // 毎フレームごとに処理するゲームループの関数
         {
-            ship.move();
+            ship.move(app);
         }
         // ゲームループ関数を毎フレーム処理の関数として追加
         sceneManager.addGameLoop(gameLoop);

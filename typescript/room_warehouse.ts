@@ -39,7 +39,7 @@ export class Room_warehouse extends Room {
                 // 表示するアイテムのスプライト設定を行う
                 if (this.itemlist.length > i) {
                     Item.changeItem(this.displayItems[i], this.itemlist[i].id);
-                } else {
+                } else {//余ったリストは全部透明スプライトにする
                     Item.changeItem(this.displayItems[i], 0);
                 }
                 // アイテムの格納個数の表示

@@ -10,8 +10,9 @@ id
 */
 type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage' | 'display';
 export class Item extends PIXI.TilingSprite {
-    static itemList = { 0: '無', 1: 'うんち', 2: '粘土' };
-    static itemMakeList = { 1: [1, 2], 2: [1, 2] };
+    static itemList = { 0: '無', 1: 'うんち', 2: '粘土', 3: '土器', 4: 'レンガ', 5: '水', 6: 'a' };
+    static itemMakeList = { 1: [1, 2], 2: [1, 2], 3: [2, 2, 2, 5] };
+    num: number;
     cnt: number = 0;
     id: number = 0;
     state: stringInOut = 'in';
@@ -19,10 +20,11 @@ export class Item extends PIXI.TilingSprite {
     tl: TimelineMax;
     explanation: string;
     static size: number = 0.6;
-    constructor(x: number, y: number, id: number, state: stringInOut) {
+    constructor(x: number, y: number, id: number, num: number, state: stringInOut) {
         super(PIXI.Loader.shared.resources.item.texture, 32, 32);
         this.x = x;
         this.y = y;
+        this.num = num;
         this.anchor.set(0.5);
         Item.changeItem(this, id);
         this.state = state;
@@ -33,7 +35,6 @@ export class Item extends PIXI.TilingSprite {
             this.y += 70;
             if (this.y >= 250) {
                 this.state = 'reserved';
-                this.cnt = 0;
                 let x = this.x;
                 let y = this.y;
                 this.position.set(Math.floor(Math.random() * (ship.w - this.width)) + this.width / 2, Math.floor(Math.random() * (ship.h - this.height)) + this.height / 2);
@@ -79,7 +80,7 @@ export class Item extends PIXI.TilingSprite {
     }
     //おじさんとアイテムの距離を測る
     len(x: number, y: number) {
-        return Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(y - this.y, 2));
+        return Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(y - this.y, 2))+1;
     }
     // おじさんとアイテムをくっつける
     stick(ship: Ship, item: Item, oji: Ojisan) {
@@ -96,7 +97,7 @@ export class Item extends PIXI.TilingSprite {
         // 既に同じアイテムが倉庫に格納されていて、空きがある場合を探す
         for (let i = 0; i < ship.warehouses.length; i++) {
             for (let j = 0; j < ship.warehouses[i].itemlist.length; j++) {// アイテムが格納できるかどうか調べる
-                if (ship.warehouses[i].itemlist[j].id == id && ship.warehouses[i].itemlist[j].num <= this.max) {
+                if (ship.warehouses[i].itemlist[j].id == id && ship.warehouses[i].itemlist[j].num <= this.max - 1) {
                     warehouse = ship.warehouses[i];
                     break;
                 }
@@ -118,22 +119,31 @@ export class Item extends PIXI.TilingSprite {
     }
     //アイテムを格納する関数
     putItem(warehouse: Room_warehouse, item: Item, oji: Ojisan, ship: Ship) {
-        let ok = false;
+        let listed = false;
         oji.state = 'free';
+        //倉庫のアイテムリストからおじさんが持っているアイテムと同じものをさがして追加する
         for (let i = 0; i < warehouse.itemlist.length; i++) {
-            if (warehouse.itemlist[i].id == item.id && warehouse.itemlist[i].num <= item.max) {
-                warehouse.itemlist[i].num++;
-                ok = true;
+            if (warehouse.itemlist[i].id == item.id && warehouse.itemlist[i].num <= item.max - 1) {
+                if (warehouse.itemlist[i].num + item.num > item.max) {//アイテムがあふれた場合
+                    ship.makeItem(ship, warehouse.x, warehouse.y, item.id, warehouse.itemlist[i].num + item.num - item.max, 'in');
+                    warehouse.itemlist[i].num = item.max;
+                    console.log("bbb");
+                } else {//アイテムが溢れない場合
+                    warehouse.itemlist[i].num += item.num;
+                    console.log(warehouse.itemlist);
+                }
+                listed = true;
                 item.removeItem();
                 break;
             }
         }
-        if (!ok) {
+        //倉庫のアイテムリストにおじさんが持っているアイテムが無い場合、新しく追加
+        if (!listed) {
             if (warehouse.itemlist.length < warehouse.kind) {
-                warehouse.pushItemlist(item.id);
+                warehouse.pushItemlist(item.id, item.num);
                 item.removeItem();
             } else {
-                item.popItem(ship, oji);
+                item.popItem(ship, oji, warehouse.x, warehouse.y, item.num);
             }
         }
         oji.tl.clear();
@@ -144,17 +154,18 @@ export class Item extends PIXI.TilingSprite {
         this.state = 'garbage';
     }
     // アイテムを地面に落とす
-    popItem(ship: Ship, oji: Ojisan) {
+    popItem(ship: Ship, oji: Ojisan, x: number, y: number, num: number) {
         this.scale.set(1);
         this.state = 'in';
-        this.x = Math.floor(Math.random() * ship.w);
-        this.y = Math.floor(Math.random() * ship.h);
+        this.num = num;
+        this.x = x;
+        this.y = y;
         oji.removeChild(this);
         ship.addChild(this);
     }
     //idからアイテムのスプライトを返す
     static makeItem(x: number, y: number, id: number) {
-        return new Item(x, y, id, 'display');
+        return new Item(x, y, id, 1, 'display');
     }
     //アイテムを別のアイテムに変更する
     static changeItem(item: Item, id: number) {
@@ -170,8 +181,5 @@ export class Item extends PIXI.TilingSprite {
             name += '　';
         }
         return name;
-    }
-    static returnItemMakingInfo(id: number) {
-
     }
 }

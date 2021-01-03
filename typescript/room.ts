@@ -47,8 +47,8 @@ export abstract class Room extends PIXI.TilingSprite {
         this.buttonMode = true;
         gamescene.addChild(this.window);
     }
-    pushItemlist(id: number) {
-        let tmp: itemList = { id: id, num: 1 };
+    pushItemlist(id: number, num: number) {
+        let tmp: itemList = { id: id, num: num };
         this.itemlist.push(tmp);
     }
     invisibleMenu() {
@@ -59,10 +59,10 @@ export abstract class Room extends PIXI.TilingSprite {
         this.window.visible = true;
     }
     static len(x1: number, y1: number, x2: number, y2: number) {
-        return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+        return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)) + 1;
     }
     static stickItemToOji(oji: Ojisan, id: number) {
-        let item = new Item(0, 0, id, 'transporting');
+        let item = new Item(0, 0, id, 1, 'transporting');
         item.scale.set(Item.size);
         oji.addChild(item);
         oji.childs.push(item);
@@ -119,7 +119,7 @@ export abstract class Room extends PIXI.TilingSprite {
             })
             .to(oji, { duration: warehouseToRoom / oji.speed, x: this.x, y: this.y })
             .call(() => {
-                this.pushItemlist(id);
+                this.pushItemlist(id, 1);
                 Room.freeOji(oji);
             });
         return true;
@@ -128,8 +128,8 @@ export abstract class Room extends PIXI.TilingSprite {
         let warehouse: Room;
         for (let i = 0; i < ship.warehouses.length; i++) {
             for (let j = 0; j < ship.warehouses[i].itemlist.length; j++) {
-                if (ship.warehouses[i].itemlist[j].id == id && ship.warehouses[i].itemlist[i].num > 0) {
-                    warehouse = ship.warehouses[i];
+                if (ship.warehouses[i].itemlist[j].id == id && ship.warehouses[i].itemlist[j].num > 0) {
+                    warehouse = ship.warehouses[j];
                     break;
                 }
             }
