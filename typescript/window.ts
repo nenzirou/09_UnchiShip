@@ -15,7 +15,8 @@ export class TextWindow extends PIXI.TilingSprite {
         // テキストに関するパラメータを定義する(ここで定義した意外にもたくさんパラメータがある)
         const textStyle = new PIXI.TextStyle({
             fontFamily: "Arial", // フォント
-            fontSize: 20,// フォントサイズ
+            fontSize: 32,// フォントサイズ
+            lineHeight:32,
             fontWeight: 'bold',
             fill: 0x333333, // 色(16進数で定義するので#ffffffと書かずに0xffffffと書く)
             dropShadow: true, // ドロップシャドウを有効にする（右下に影をつける）

@@ -3,6 +3,7 @@ import { Room } from "./room";
 import { Room_wall } from "./room_wall";
 import { Room_aisle } from "./room_aisle";
 import { Room_warehouse } from "./room_warehouse";
+import { Room_work } from "./room_work";
 import { Room_bed } from "./room_bed";
 import { Ojisan } from "./ojisan";
 import { Item } from "./item";
@@ -21,7 +22,19 @@ export class Ship extends PIXI.Container {
     w: number;
     h: number;
     gamescene: PIXI.Container;
-    constructor(x: number, y: number, width: number, height: number,gamescene:PIXI.Container) {
+    initialRoom: number[][] = [
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 3, 3, 3, 3, 3, 3, 0],
+        [0, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 4, 4, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 0],
+        [0, 2, 2, 2, 2, 2, 2, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+    ];
+    constructor(x: number, y: number, width: number, height: number, gamescene: PIXI.Container) {
         super();
         this.x = x;// 船全体のｘ座標
         this.y = y;// 船全体のｙ座標
@@ -33,19 +46,29 @@ export class Ship extends PIXI.Container {
         for (let i = 0; i < 10; i++) {
             for (let j = 0; j < 8; j++) {
                 let room: Room;
-                if (j == 0 && (i == 1 || i == 10) || j == 7 && (i == 1 || i == 10)) {
-                    room = new Room_warehouse(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
-                } else if(j==4) {
-                    room = new Room_bed(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
-                } else {
-                    room = new Room_aisle(50 * j + 25, 50 * i + 25, j, i,this.gamescene);
+                switch (this.initialRoom[i][j]) {
+                    case 0: {
+                        room = new Room_wall(j * 50 + 25, i * 50 + 25, j, i, gamescene); break;
+                    }
+                    case 1: {
+                        room = new Room_aisle(j * 50 + 25, i * 50 + 25, j, i, gamescene); break;
+                    }
+                    case 2: {
+                        room = new Room_warehouse(j * 50 + 25, i * 50 + 25, j, i, gamescene); break;
+                    }
+                    case 3: {
+                        room = new Room_bed(j * 50 + 25, i * 50 + 25, j, i, gamescene); break;
+                    }
+                    case 4: {
+                        room = new Room_work(j * 50 + 25, i * 50 + 25, j, i, gamescene); break;
+                    }
                 }
                 this.addChild(room);
                 this.rooms.push(room);
             }
         }
         // おじさん生成
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 50; i++) {
             let oji = new Ojisan(Math.random() * width, Math.random() * height);
             this.addChild(oji);
             this.ojis.push(oji);
@@ -64,14 +87,14 @@ export class Ship extends PIXI.Container {
             }
         }
         //倉庫リストを作成する
-        for (let i = 0; i < this.rooms.length; i++){
+        for (let i = 0; i < this.rooms.length; i++) {
             if (this.rooms[i].id === 'warehouse') {
                 this.warehouses.push(this.rooms[i]);
             }
         }
         // アイテムを生成する
         if (this.cnt % 20 == 0) {
-            let item = new Item(this.w, -100,0, 'out');
+            let item = new Item(this.w, -100, Math.floor(Math.random()*2)+1, 'out');
             this.addChild(item);
             this.items.push(item);
         }
@@ -88,7 +111,7 @@ export class Ship extends PIXI.Container {
             }
         }
         // ステージの動作を行う
-        for (let i = 0; i < this.rooms.length; i++){
+        for (let i = 0; i < this.rooms.length; i++) {
             this.rooms[i].move(this);
         }
         // おじさんの動作を行う
