@@ -11,7 +11,7 @@ satiety:満腹度
 destiny:便意
 fatigue:疲労度
 */
-type stringOjiState = 'free' | 'transport' | 'moving' | 'sleeping';
+type stringOjiState = 'free' | 'transport' | 'moving' | 'sleeping' | 'working';
 export class Ojisan extends PIXI.TilingSprite {
     background: PIXI.Graphics;
     static ID = 0;
@@ -25,9 +25,9 @@ export class Ojisan extends PIXI.TilingSprite {
     cnt: number = 0;
     nextCnt: number = 0;
     tl: TimelineMax;
-    childs: PIXI.TilingSprite[]=[];
+    childs: PIXI.TilingSprite[] = [];
     room: Room;
-    speed: number = 300 + Math.random()*20;
+    speed: number = 300 + Math.random() * 20;
     window: SpeechWindow;
     constructor(x: number, y: number) {
         super(PIXI.Loader.shared.resources.oji.texture, 20, 32);
@@ -61,7 +61,7 @@ export class Ojisan extends PIXI.TilingSprite {
             this.tilePosition.x += 20;
             this.tilePosition.x = this.tilePosition.x % 60;
         }
-        this.window.setText('hp:' + this.hp+'\n疲労:'+this.fatigue+'\nid:'+this.id+'\n状態'+this.state);
+        this.window.setText('hp:' + this.hp + '\n疲労:' + this.fatigue + '\nid:' + this.id + '\n状態' + this.state);
         // 停止状態の動き
         if (this.state === 'free') {
             // 自由移動
@@ -104,7 +104,6 @@ export class Ojisan extends PIXI.TilingSprite {
             }
             if (this.fatigue < 0) {
                 this.fatigue = 0;
-                this.visible = true;
                 Room.freeOji(this);
                 Room.removeOjiFromRoom(this, this.room);
                 this.room = null;

@@ -10,7 +10,8 @@ id
 */
 type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage' | 'display';
 export class Item extends PIXI.TilingSprite {
-    static itemList = { 0: '無',1:'うんち',2:'粘土' };
+    static itemList = { 0: '無', 1: 'うんち', 2: '粘土' };
+    static itemMakeList = { 1: [1, 2], 2: [1, 2] };
     cnt: number = 0;
     id: number = 0;
     state: stringInOut = 'in';
@@ -31,11 +32,14 @@ export class Item extends PIXI.TilingSprite {
         if (this.state === 'out') {
             this.y += 70;
             if (this.y >= 250) {
-                this.state = 'in';
+                this.state = 'reserved';
                 this.cnt = 0;
-                this.x = Math.floor(Math.random() * (ship.w - this.width)) + this.width / 2;
-                this.y = Math.floor(Math.random() * (ship.h - this.height)) + this.height / 2;
-                this.tl.from(this.scale, { duration: 0.2, x: 0.1, y: 0.1, ease: 'back.out(10)' });
+                let x = this.x;
+                let y = this.y;
+                this.position.set(Math.floor(Math.random() * (ship.w - this.width)) + this.width / 2, Math.floor(Math.random() * (ship.h - this.height)) + this.height / 2);
+                this.tl.from(this, { duration: 1, x: x, y: y });
+                this.tl.from(this.scale, { duration: 0.2, x: 0.5, y: 0.5, ease: 'back.out(10)' });
+                this.tl.call(() => this.state = 'in');
             }
         } else if (this.state === 'in') {
             if (this.cnt % 300 == 1 && ship.freeOjis.length != 0) {
@@ -64,14 +68,14 @@ export class Item extends PIXI.TilingSprite {
                         .to(oji, { duration: this.len(warehouse.x, warehouse.y) / oji.speed, x: warehouse.x, y: warehouse.y })
                         .call(this.putItem, [warehouse, this, oji, ship]);
                 }
+                if (this.cnt > 60 * 60) {
+                    this.state = 'garbage';
+                }
             }
+            this.cnt++;
         } else if (this.state === 'transporting') {
             this.scale.set(Item.size);
         }
-        if (this.cnt > 60 * 60 && this.state === 'in') {
-            this.state = 'garbage';
-        }
-        this.cnt++;
     }
     //おじさんとアイテムの距離を測る
     len(x: number, y: number) {
@@ -149,7 +153,7 @@ export class Item extends PIXI.TilingSprite {
         ship.addChild(this);
     }
     //idからアイテムのスプライトを返す
-    static makeItem(x:number,y:number,id:number) {
+    static makeItem(x: number, y: number, id: number) {
         return new Item(x, y, id, 'display');
     }
     //アイテムを別のアイテムに変更する
@@ -162,9 +166,12 @@ export class Item extends PIXI.TilingSprite {
     //フォーマットしたアイテムの名前を返す
     static returnItemName(id: number) {
         let name = Item.itemList[id];
-        for (let i = name.length; i < 7; i++){
+        for (let i = name.length; i < 7; i++) {
             name += '　';
         }
         return name;
+    }
+    static returnItemMakingInfo(id: number) {
+
     }
 }

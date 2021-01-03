@@ -33,21 +33,23 @@ export class Room_warehouse extends Room {
         }
     }
     move(ship: Ship) {
-        let text: string = "";
-        for (let i = 0; i < this.kind; i++) {
-            // 表示するアイテムのスプライト設定を行う
-            if (this.itemlist.length > i) {
-                Item.changeItem(this.displayItems[i], this.itemlist[i].id);
-            } else {
-                Item.changeItem(this.displayItems[i], 0);
+        if (this.window.visible) {
+            let text: string = "";
+            for (let i = 0; i < this.kind; i++) {
+                // 表示するアイテムのスプライト設定を行う
+                if (this.itemlist.length > i) {
+                    Item.changeItem(this.displayItems[i], this.itemlist[i].id);
+                } else {
+                    Item.changeItem(this.displayItems[i], 0);
+                }
+                // アイテムの格納個数の表示
+                if (i < this.itemlist.length) {
+                    text += Item.returnItemName(this.itemlist[i].id) + "×" + this.itemlist[i].num + "\n";
+                } else {
+                    text += "空き\n";
+                }
             }
-            // アイテムの格納個数の表示
-            if (i < this.itemlist.length) {
-                text += Item.returnItemName(this.itemlist[i].id)+"×" + this.itemlist[i].num + "\n";
-            } else {
-                text += "空き\n";
-            }
+            this.window.setText(text);
         }
-        this.window.setText(text);
     }
 }

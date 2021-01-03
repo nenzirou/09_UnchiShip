@@ -7,6 +7,7 @@ import { Room_work } from "./room_work";
 import { Room_bed } from "./room_bed";
 import { Ojisan } from "./ojisan";
 import { Item } from "./item";
+import { Button } from "./button";
 /*
 shipに持たせる機能
 船の全体像
@@ -21,6 +22,7 @@ export class Ship extends PIXI.Container {
     cnt: number = 0;
     w: number;
     h: number;
+    static menu: boolean = false;
     gamescene: PIXI.Container;
     initialRoom: number[][] = [
         [0, 0, 0, 0, 0, 0, 0, 0],
@@ -68,12 +70,17 @@ export class Ship extends PIXI.Container {
             }
         }
         // おじさん生成
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 3; i++) {
             let oji = new Ojisan(Math.random() * width, Math.random() * height);
             this.addChild(oji);
             this.ojis.push(oji);
         }
         //this.scale.set(0.8, 0.8);
+        // let buntton = new Button("a", 50, 50, 0, 0, 0, 0x444444);
+        // buntton.on("pointertap", () => {
+        //     console.log("a");
+        // });
+        // this.addChild(buntton);
     }
     move() {
         //デバッグ用
@@ -93,10 +100,8 @@ export class Ship extends PIXI.Container {
             }
         }
         // アイテムを生成する
-        if (this.cnt % 20 == 0) {
-            let item = new Item(this.w, -100, Math.floor(Math.random()*2)+1, 'out');
-            this.addChild(item);
-            this.items.push(item);
+        if (this.cnt % 100 == 0) {
+            this.makeItem(this, this.w, -100, Math.floor(Math.random() * 2) + 1, 'out');
         }
         //this.scale.set(0.5 + this.cnt % 500 / 1000, 0.5 + this.cnt % 500 / 1000);
         //this.x = Math.sin(this.cnt / 300) * 20 + 20;
@@ -126,5 +131,10 @@ export class Ship extends PIXI.Container {
         this.freeOjis = [];
         this.warehouses = [];
         this.cnt++;
+    }
+    makeItem(ship: Ship, x: number, y: number, id: number, state) {
+        let item = new Item(x, y, id, state);
+        ship.addChild(item);
+        ship.items.push(item);
     }
 }

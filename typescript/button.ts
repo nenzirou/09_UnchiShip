@@ -5,13 +5,12 @@ import * as PIXI from "pixi.js";
  * @param width 横幅
  * @param height 縦幅
  */
-export class Button extends PIXI.Container{
+export class Button extends PIXI.Container {
     buttonText: PIXI.Text;
     constructor(text: string, width: number, height: number, x: number, y: number, z: number, color: number) {
         super();
         const fontSize = 20; // フォントサイズ
         const buttonAlpha = 0.6; // ボタン背景の透明度
-
         // ボタン作成
         const backColor = new PIXI.Graphics(); // グラフィックオブジェクト（背景に半透明な四角を配置するために使用）
         backColor.beginFill(color, buttonAlpha); // 色、透明度を指定して描画開始
