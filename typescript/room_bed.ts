@@ -5,7 +5,7 @@ import { Ship } from "./ship";
 ベッドルーム
 */
 export class Room_bed extends Room {
-    constructor(x: number, y: number, rNx: number, rNy: number, gamescene: PIXI.Container) {
+    constructor(x: number, y: number, gamescene: PIXI.Container) {
         super(3,x, y, PIXI.Loader.shared.resources.room_bed.texture, gamescene);
     }
     move(ship: Ship) {

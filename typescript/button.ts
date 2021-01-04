@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import gsap from "gsap";
 /**
  * ボタンを生成してオブジェクトを返す関数
  * @param text テキスト
@@ -7,17 +8,15 @@ import * as PIXI from "pixi.js";
  */
 export class Button extends PIXI.Container {
     buttonText: PIXI.Text;
-    constructor(text: string, width: number, height: number, x: number, y: number, z: number, color: number) {
+    constructor(text: string, width: number, height: number, x: number, y: number, z: number, color: number, fontSize: number, alpha: number) {
         super();
-        const fontSize = 20; // フォントサイズ
-        const buttonAlpha = 0.6; // ボタン背景の透明度
         // ボタン作成
         const backColor = new PIXI.Graphics(); // グラフィックオブジェクト（背景に半透明な四角を配置するために使用）
-        backColor.beginFill(color, buttonAlpha); // 色、透明度を指定して描画開始
+        backColor.beginFill(color, alpha); // 色、透明度を指定して描画開始
         backColor.drawRect(0, 0, width, height); // 位置(0,0)を左上にして、width,heghtの四角形を描画
         backColor.endFill(); // 描画完了
         backColor.interactive = true; // クリック可能にする
-        backColor.buttonMode = true;
+        backColor.buttonMode = true;//クリック可能なマウスカーソルにする
         this.addChild(backColor); // 背景をボタンコンテナに追加
 
         // テキストに関するパラメータを定義する(ここで定義した意外にもたくさんパラメータがある)
@@ -30,14 +29,38 @@ export class Button extends PIXI.Container {
         });
 
         this.buttonText = new PIXI.Text(text, textStyle); // テキストオブジェクトをtextStyleのパラメータで定義
-        this.buttonText.anchor.x = 0.5; // アンカーを中央に設置する(アンカーは0~1を指定する)
-        this.buttonText.anchor.y = 0.5; // アンカーを中央に設置する(アンカーは0~1を指定する)
-        this.buttonText.x = width / 2; // ボタン中央にテキストを設置するため、width/2の値をx値に指定
-        this.buttonText.y = height / 2; // ボタン中央テキストを設置するため、height/2の値をy値に指定
+        this.buttonText.anchor.set(0.5);
+        this.buttonText.position.set(this.width / 2, this.height / 2);
+        this.interactive = true; // クリック可能にする
         this.addChild(this.buttonText); // ボタンテキストをボタンコンテナに追加
-        this.interactive = true;
         this.x = x;
         this.y = y;
         this.zIndex = z;
+
+    }
+    static makeTouchSpeech(text: string, width: number, height: number, x: number, y: number, z: number, fontSize: number, alpha: number, parent) {
+        let speech = new Button(text, width, height, x, y, z, 0x333333, fontSize, alpha);
+        const tl = gsap.timeline();//タイムライン初期化
+        tl
+            .from(speech.scale, { duration: 0.1, x: 0.1, y: 0.1 })
+            .to(speech, { duration: 5, alpha: 0, ease: "power4.in" })
+            .call(() => {
+                parent.interactive = true;
+                parent.removeChild(speech);
+            })
+        parent.interactive = false;
+        parent.addChild(speech);
+    }
+    static makeSpeech(text: string, duration: number, width: number, height: number, x: number, y: number, z: number, fontSize: number, alpha: number) {
+        let speech = new Button(text, width, height, x, y, z, 0x333333, fontSize, alpha);
+        speech.interactive = false;
+        const tl = gsap.timeline();//タイムライン初期化
+        tl
+            .from(speech.scale, { duration: 0.1, x: 0.1, y: 0.1 })
+            .to(speech, { duration: duration, alpha: 0, ease: "power4.in" })
+            .call(() => {
+                speech.parent.removeChild(speech);
+            })
+        return speech;
     }
 }

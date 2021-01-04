@@ -23,7 +23,7 @@ interface itemList {
 type stringRoomState = 'free' | 'using' | 'gathering' | 'preparation';
 export abstract class Room extends PIXI.TilingSprite {
     static roomList = { 0: '壁', 1: '通路', 2: '倉庫', 3: 'ベッド', 4: '作業場' };
-    static roomMakeList = { /*倉庫*/2: [[1, 1], [2, 1]], /*ベッド*/3: [[1, 1], [2, 3]], /*作業場*/4: [[1, 2], [2, 2]] };
+    static roomMakeList = { /*倉庫*/2: [[1, 1], [2, 1]], /*ベッド*/3: [[3, 1], [4, 3]], /*作業場*/4: [[4, 2], [5, 2]] };
     oneLayerWindow: TextWindow;//第１層ウィンドウ
     oneLayerBack: PIXI.Container;//第１層ウィンドウの戻るボタン
     oneLayerItems: Item[] = [];//第１層のアイテムアイコン
@@ -46,16 +46,14 @@ export abstract class Room extends PIXI.TilingSprite {
     cnt: number = 0;// タイムカウント
     ojiID: number[] = [];//この部屋にいるおじさんのIDリスト
     ojiMax: number = 4;// おじさんを入れられる最大数
-    constructor(id:number,x: number, y: number, texture: PIXI.Texture, gamescene: PIXI.Container) {
+    constructor(id: number, x: number, y: number, texture: PIXI.Texture, gamescene: PIXI.Container) {
         super(texture, 50, 50);
         this.id = id;//部屋のID
         this.anchor.set(0.5);//ローカル座標の始点を真ん中にする
         this.x = x;// 部屋のｘ座標
         this.y = y;// 部屋のｙ座標
         this.zIndex = -1;//部屋のｚ座標
-
-        this.oneLayerWindow = new TextWindow(0, 0, 1, 1, 1, 0.8);
-        this.oneLayerWindow.visible = false;
+        this.oneLayerWindow = new TextWindow(0, 0, 1, 1, 1, 0.8, false);
         gamescene.addChild(this.oneLayerWindow);
         this.interactive = true;
         this.buttonMode = true;
@@ -63,13 +61,6 @@ export abstract class Room extends PIXI.TilingSprite {
     pushItemlist(id: number, num: number) {
         let tmp: itemList = { id: id, num: num };
         this.itemlist.push(tmp);
-    }
-    invisibleMenu() {
-        PIXI.Loader.shared.resources.hit.sound.play();
-        this.parent.parent.visible = false;
-    }
-    visibleMenu() {
-        this.oneLayerWindow.visible = true;
     }
     static len(x1: number, y1: number, x2: number, y2: number) {
         return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)) + 1;
@@ -228,14 +219,24 @@ export abstract class Room extends PIXI.TilingSprite {
         return sum;
     }
     //戻るボタンを作成する
-    makeBackButton(x: number, y: number, closeWindow: TextWindow) {
-        let button = new Button("戻る", 50, 30, x, y, 2, 0xcccccc);
+    static makeBackButton(x: number, y: number, closeWindow: TextWindow) {
+        let button = new Button("戻る", 50, 30, x, y, 2, 0xcccccc, 20, 1);
         button.on("pointerup", () => {
             PIXI.Loader.shared.resources.close.sound.play();
             closeWindow.visible = false;
         });
         closeWindow.addChild(button);
         return button;
+    }
+    //表示専用のアイテムを作成する
+    static makeDisplayItem(x: number, y: number, id: number, parent: TextWindow, intaractive: boolean) {
+        let item = new Item(x, y, id, 1, 'display');
+        if (intaractive) {
+            item.interactive = true;
+            item.buttonMode = true;
+        }
+        parent.addChild(item);
+        return item;
     }
     abstract move(ship: Ship);
 }

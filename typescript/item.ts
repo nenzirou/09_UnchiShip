@@ -11,7 +11,7 @@ id
 export type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage' | 'display' | 'made';
 export class Item extends PIXI.TilingSprite {
     static itemList = { 0: '無', 1: 'うんち', 2: '粘土', 3: '土器', 4: 'レンガ', 5: '水', 6: 'a' };
-    static itemMakeList = { /*うんち*/1: [[1, 1], [2, 1]], /*粘土*/2: [[1, 1], [2, 3]], /*土器*/3: [[1, 2], [2, 2]], /*レンガ*/4: [[1, 1], [2, 3]], /*水*/5: [[2, 3], [5, 1]] };
+    static itemMakeList = { /*うんち*/1: [[1, 1], [2, 1]], /*粘土*/2: [[1, 1], [2, 3]], /*土器*/3: [[1, 1], [2, 1], [4, 1], [5, 1]], /*レンガ*/4: [[1, 1], [2, 3]], /*水*/5: [[1, 4]] };
     num: number;
     cnt: number = 0;
     id: number = 0;
@@ -164,10 +164,6 @@ export class Item extends PIXI.TilingSprite {
         this.y = y;
         oji.removeChild(this);
         ship.addChild(this);
-    }
-    //idからアイテムのスプライトを返す
-    static makeItem(x: number, y: number, id: number) {
-        return new Item(x, y, id, 1, 'display');
     }
     //アイテムを別のアイテムに変更する
     static changeItem(item: Item, id: number) {

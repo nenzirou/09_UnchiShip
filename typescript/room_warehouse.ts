@@ -9,25 +9,22 @@ import { Item } from "./item";
 
 export class Room_warehouse extends Room {
     displayItems: Item[] = [];
-    constructor(x: number, y: number, rNx: number, rNy: number, gamescene: PIXI.Container) {
-        super(2,x, y, PIXI.Loader.shared.resources.room_warehouse.texture, gamescene);
+    constructor(x: number, y: number, gamescene: PIXI.Container) {
+        super(2, x, y, PIXI.Loader.shared.resources.room_warehouse.texture, gamescene);
         this.x = x;// 部屋のｘ座標
         this.y = y;// 部屋のｙ座標
         this.on("pointerdown", () => {
             PIXI.Loader.shared.resources.open.sound.play();
-            this.visibleMenu();
+            this.oneLayerWindow.visible = true;
             this.tilePosition.x = 50;
         });
-        this.oneLayerBack = new Button("戻る", 50, 30, 0, 0, 10, 0xcccccc);
+        this.oneLayerBack = Room.makeBackButton(0, 0, this.oneLayerWindow);
         this.oneLayerBack.on("pointerdown", () => {
-            PIXI.Loader.shared.resources.close.sound.play();
-            this.oneLayerWindow.visible = false;
             this.tilePosition.x = 0;
         })
-        this.oneLayerWindow.buttonText.position.set(64, 32);
-        this.oneLayerWindow.addChild(this.oneLayerBack);
+        this.oneLayerWindow.text.position.set(64, 32);
         for (let i = 0; i < 8; i++) {
-            this.displayItems.push(Item.makeItem(32 + 16, (i + 1) * 32 + 16, 0));
+            this.displayItems.push(new Item(32 + 16, (i + 1) * 32 + 16, 0, 1, 'display'));
             this.oneLayerWindow.addChild(this.displayItems[i]);
         }
     }

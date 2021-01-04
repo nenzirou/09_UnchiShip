@@ -2,7 +2,7 @@ import gsap from "gsap";
 import * as PIXI from "pixi.js";
 import { Ship } from "./ship";
 import { Room } from "./room";
-import { SpeechWindow } from "./speech_window";
+import { Button } from "./button";
 /*
 おじさんに持たせる機能
 id:おじさんの識別子
@@ -28,7 +28,6 @@ export class Ojisan extends PIXI.TilingSprite {
     childs: PIXI.TilingSprite[] = [];
     room: Room;
     speed: number = 500;
-    window: SpeechWindow;
     constructor(x: number, y: number) {
         super(PIXI.Loader.shared.resources.oji.texture, 20, 32);
         this.anchor.set(0.5);
@@ -41,13 +40,10 @@ export class Ojisan extends PIXI.TilingSprite {
         this.zIndex = 1;
         this.interactive = true;
         this.buttonMode = true;
-        this.window = new SpeechWindow(0, 0, 1, 1, 1);
-        this.addChild(this.window);
-        this.window.visible = false;
+        this.interactiveChildren = false;
         this.on("pointerdown", () => {
-            //PIXI.Loader.shared.resources.close.sound.play();
-            this.window.visible = !this.window.visible;
-            this.window.position.set(0, -80);
+            //Button.makeTouchSpeech('hp:' + this.hp + '\n疲労:' + this.fatigue + '\nid:' + this.id + '\n状態' + this.state, 130, 150, 0, 0, 1, 32, 0.8, this);
+            this.addChild(Button.makeSpeech('hp:' + this.hp + '\n疲労:' + this.fatigue + '\nid:' + this.id + '\n状態' + this.state, 5, 130, 150, 0, 0, 1, 32, 0.8));
         })
     }
     move(ship: Ship) {
@@ -61,7 +57,6 @@ export class Ojisan extends PIXI.TilingSprite {
             this.tilePosition.x += 20;
             this.tilePosition.x = this.tilePosition.x % 60;
         }
-        this.window.setText('hp:' + this.hp + '\n疲労:' + this.fatigue + '\nid:' + this.id + '\n状態' + this.state);
         // 停止状態の動き
         if (this.state === 'free') {
             // 自由移動

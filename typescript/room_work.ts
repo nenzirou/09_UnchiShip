@@ -9,73 +9,61 @@ import { MyText } from "./text";
 働く場所
 */
 export class Room_work extends Room {
-
     static makableItems: number[] = [1, 2, 3, 4, 5];
-    constructor(x: number, y: number, rNx: number, rNy: number, gamescene: PIXI.Container) {
+    constructor(x: number, y: number, gamescene: PIXI.Container) {
         super(4, x, y, PIXI.Loader.shared.resources.room_work.texture, gamescene);
-        this.stateText = new MyText(48, 300, 1, 32, 32, 0x333333);
+        //状態表示テキストの設定 デバッグ用
+        this.stateText = new MyText(100, 0, 1, 32, 32, 0x333333);
         this.oneLayerWindow.addChild(this.stateText);
         this.stateText.text = this.state;
-        //ワークベンチがクリックされたときの挙動
+        //部屋がクリックされたときの処理
         this.on("pointerup", () => {
             PIXI.Loader.shared.resources.open.sound.play();
-            this.visibleMenu();
+            this.oneLayerWindow.visible = true;
         });
         // 第１層戻るボタンの設定
-        this.oneLayerBack = this.makeBackButton(0, 0, this.oneLayerWindow);//第１層ウィンドウに戻るボタンを追加
+        this.oneLayerBack = Room.makeBackButton(0, 0, this.oneLayerWindow);//第１層ウィンドウに戻るボタンを追加
         this.oneLayerBack.on("pointerdown", () => {
             Room.changeVisual(this.twoLayerWindows, false);//２層のウィンドウを全て非表示にする
         })
-        //必要アイテム
-        for (let i = 0; i < 4; i++) {
-            this.twoLayerItems.push(Item.makeItem(32 + 16, (i + 2) * 32 + 16, 0));
-            this.twoLayerItems[i].zIndex = 100;
-            this.oneLayerWindow.addChild(this.twoLayerItems[i]);
-        }
-        //テキストの設定
-        this.oneLayerWindow.buttonText.position.set(64, 32);
+        //第１ウィンドウのテキスト位置の設定
+        this.oneLayerWindow.text.position.set(64, 32);
         //作成アイテムアイコンの挙動
         for (let i = 0; i < Room_work.makableItems.length; i++) {
-            this.oneLayerItems.push(Item.makeItem(32 + 16, (i + 1) * 32 + 16, Room_work.makableItems[i]));
-            this.oneLayerItems[i].interactive = true;
-            this.oneLayerItems[i].buttonMode = true;
-            this.oneLayerWindow.addChild(this.oneLayerItems[i]);
-            //入れ子作成ウィンドウ
-            let itemWindow = new TextWindow(0, 0, 1, 1, 1, 1);
-            itemWindow.visible = false;
+            //第1層アイテムの設定
+            this.oneLayerItems.push(Room.makeDisplayItem(32 + 16, (i + 1) * 32 + 16, Room_work.makableItems[i], this.oneLayerWindow, true));
+            //第2層ウィンドウの設定
+            let itemWindow = new TextWindow(0, 0, 1, 1, 1, 1, false);
             this.oneLayerWindow.addChild(itemWindow);
             this.twoLayerWindows.push(itemWindow);
             let itemlist = Item.itemMakeList[Room_work.makableItems[i]];//[[],[]]型がくる
-            //必要素材のスプライト 透明なアイテムスプライト４つを第１層ウィンドウに共有しておいておく　強化ウィンドウを開くと、その４つが素材として表示される
-            this.oneLayerItems[i].on("pointerdown", () => {
-                //第二層ウィンドウ表示
+            //第2層アイテムの設定
+            for (let j = 0; j < itemlist.length; j++) {
+                this.twoLayerItems.push(Room.makeDisplayItem(32 + 16, (j + 2) * 32 + 16, itemlist[j][0], this.twoLayerWindows[i], true));
+            }
+            //第1層アイテムの挙動
+            this.oneLayerItems[i].on("pointerup", () => {
+                //第2層ウィンドウ表示
                 PIXI.Loader.shared.resources.open.sound.play();
                 this.twoLayerWindows[i].visible = true;
-                for (let j = 0; j < itemlist.length; j++) {
-                    Item.changeItem(this.twoLayerItems[j], itemlist[j][0]);
-                    this.twoLayerItems[j].visible = true;
-                }
             });
             //第２層戻るボタンの設定
-            this.twoLayerBacks.push(this.makeBackButton(50, 0, this.twoLayerWindows[i]));
+            this.twoLayerBacks.push(Room.makeBackButton(50, 0, this.twoLayerWindows[i]));
             //作成ボタンの挙動
-            let making = new Button("作成", 100, 50, this.oneLayerWindow.width / 2, 400, 2, 0x333333);
-            making.on("pointertap", () => {
+            let makingButton = new Button("作成", 100, 50, 32, 400, 2, 0x333333, 26, 1);
+            makingButton.on("pointerup", () => {
                 if (this.state === 'free') {
                     PIXI.Loader.shared.resources.close.sound.play();
                     this.twoLayerWindows[i].visible = false;//第２層のウィンドウを閉じる
-                    for (let j = 0; j < this.twoLayerItems.length; j++) {
-                        Item.changeItem(this.twoLayerItems[j], 0);
-                    }
-                    this.make(this.oneLayerItems[i].id);
+                    this.startMakeItem(this.oneLayerItems[i].id);
                 }
             });
-            this.twoLayerWindows[i].addChild(making);
+            this.twoLayerWindows[i].addChild(makingButton);
         }
     }
     move(ship: Ship) {
         //テキスト更新
-        if (this.oneLayerWindow.visible) {
+        if (this.oneLayerWindow.visible) {//第1層テキスト更新
             this.stateText.text = "" + this.state;
             let text = '';
             for (let i = 0; i < Room_work.makableItems.length; i++) {
@@ -83,7 +71,7 @@ export class Room_work extends Room {
             }
             this.oneLayerWindow.setText(text);
         }
-        for (let i = 0; i < this.twoLayerWindows.length; i++) {
+        for (let i = 0; i < this.twoLayerWindows.length; i++) {//第2層テキスト更新
             if (this.twoLayerWindows[i].visible) {
                 let itemlist = Item.itemMakeList[Room_work.makableItems[i]];//[[],[]]型がくる
                 //必要素材の必要数を表示するテキストを設定
@@ -122,7 +110,7 @@ export class Room_work extends Room {
                                 this.ojiID.push(oji.id);
                                 this.state = 'using'
                                 this.itemlist = [];
-                                this.makeCnt = 60 * 20;
+                                this.makeCnt = 60 * 10;
                             });
                     }
                 }
@@ -138,7 +126,7 @@ export class Room_work extends Room {
                     this.ojiID = [];
                     ship.makeItem(ship, this.x, this.y, this.makingItem, 1, 'made');
                     if (this.loop) {
-                        this.make(this.makingItem);
+                        this.startMakeItem(this.makingItem);
                     } else {
                         this.makingItem = 0;
                     }
@@ -148,7 +136,7 @@ export class Room_work extends Room {
         }
         this.cnt++;
     }
-    make(id: number) {
+    startMakeItem(id: number) {
         if (this.state === 'free') {
             this.state = 'gathering';//アイテム収集開始
             this.makingItem = id;
