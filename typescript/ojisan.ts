@@ -27,7 +27,7 @@ export class Ojisan extends PIXI.TilingSprite {
     tl: TimelineMax;
     childs: PIXI.TilingSprite[] = [];
     room: Room;
-    speed: number = 100;
+    speed: number = 500;
     window: SpeechWindow;
     constructor(x: number, y: number) {
         super(PIXI.Loader.shared.resources.oji.texture, 20, 32);
@@ -79,7 +79,7 @@ export class Ojisan extends PIXI.TilingSprite {
             }
             // 就寝
             if (this.fatigue > 90) {
-                let bed: Room = Room.findRoom(ship, 'bed', 'free');
+                let bed: Room = Room.findRoom(ship, 3, 'free');
                 if (bed !== undefined) {
                     let ojiToBed = Room.len(this.x, this.y, bed.x, bed.y);
                     this.state = 'moving';

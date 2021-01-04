@@ -6,12 +6,9 @@ import { Ship } from "./ship";
 */
 export class Room_wall extends Room {
     constructor(x: number, y: number, rNx: number, rNy: number, gamescene: PIXI.Container) {
-        super(x, y, rNx, rNy,PIXI.Loader.shared.resources.room_wall.texture, gamescene);
-        this.id = "wall";
-        this.x = x;// 部屋のｘ座標
-        this.y = y;// 部屋のｙ座標
+        super(0, x, y, PIXI.Loader.shared.resources.room_wall.texture, gamescene);
     }
-    move(ship:Ship) {
+    move(ship: Ship) {
 
     }
 }

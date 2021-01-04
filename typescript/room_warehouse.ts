@@ -10,8 +10,7 @@ import { Item } from "./item";
 export class Room_warehouse extends Room {
     displayItems: Item[] = [];
     constructor(x: number, y: number, rNx: number, rNy: number, gamescene: PIXI.Container) {
-        super(x, y, rNx, rNy, PIXI.Loader.shared.resources.room_warehouse.texture, gamescene);
-        this.id = "warehouse";
+        super(2,x, y, PIXI.Loader.shared.resources.room_warehouse.texture, gamescene);
         this.x = x;// 部屋のｘ座標
         this.y = y;// 部屋のｙ座標
         this.on("pointerdown", () => {
@@ -19,21 +18,21 @@ export class Room_warehouse extends Room {
             this.visibleMenu();
             this.tilePosition.x = 50;
         });
-        this.back = new Button("戻る", 50, 30, 0, 0, 10, 0xcccccc);
-        this.back.on("pointerdown", () => {
+        this.oneLayerBack = new Button("戻る", 50, 30, 0, 0, 10, 0xcccccc);
+        this.oneLayerBack.on("pointerdown", () => {
             PIXI.Loader.shared.resources.close.sound.play();
-            this.window.visible = false;
+            this.oneLayerWindow.visible = false;
             this.tilePosition.x = 0;
         })
-        this.window.buttonText.position.set(64, 32);
-        this.window.addChild(this.back);
+        this.oneLayerWindow.buttonText.position.set(64, 32);
+        this.oneLayerWindow.addChild(this.oneLayerBack);
         for (let i = 0; i < 8; i++) {
             this.displayItems.push(Item.makeItem(32 + 16, (i + 1) * 32 + 16, 0));
-            this.window.addChild(this.displayItems[i]);
+            this.oneLayerWindow.addChild(this.displayItems[i]);
         }
     }
     move(ship: Ship) {
-        if (this.window.visible) {
+        if (this.oneLayerWindow.visible) {
             let text: string = "";
             for (let i = 0; i < this.kind; i++) {
                 // 表示するアイテムのスプライト設定を行う
@@ -49,7 +48,7 @@ export class Room_warehouse extends Room {
                     text += "空き\n";
                 }
             }
-            this.window.setText(text);
+            this.oneLayerWindow.setText(text);
         }
     }
 }

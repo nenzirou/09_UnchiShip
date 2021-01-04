@@ -8,10 +8,10 @@ import gsap from "gsap";
 itemに持たせる機能
 id
 */
-type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage' | 'display';
+export type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage' | 'display' | 'made';
 export class Item extends PIXI.TilingSprite {
     static itemList = { 0: '無', 1: 'うんち', 2: '粘土', 3: '土器', 4: 'レンガ', 5: '水', 6: 'a' };
-    static itemMakeList = { 1: [1, 2], 2: [1, 2], 3: [2, 2, 2, 5] };
+    static itemMakeList = { /*うんち*/1: [[1, 1], [2, 1]], /*粘土*/2: [[1, 1], [2, 3]], /*土器*/3: [[1, 2], [2, 2]], /*レンガ*/4: [[1, 1], [2, 3]], /*水*/5: [[2, 3], [5, 1]] };
     num: number;
     cnt: number = 0;
     id: number = 0;
@@ -76,11 +76,15 @@ export class Item extends PIXI.TilingSprite {
             this.cnt++;
         } else if (this.state === 'transporting') {
             this.scale.set(Item.size);
+        } else if (this.state === 'made') {
+            this.state = 'reserved';
+            this.tl.from(this.scale, { duration: 1, x: 0.1, y: 0.1, ease: 'back.out(10)' });
+            this.tl.call(() => this.state = 'in');
         }
     }
     //おじさんとアイテムの距離を測る
     len(x: number, y: number) {
-        return Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(y - this.y, 2))+1;
+        return Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(y - this.y, 2)) + 1;
     }
     // おじさんとアイテムをくっつける
     stick(ship: Ship, item: Item, oji: Ojisan) {
@@ -95,10 +99,10 @@ export class Item extends PIXI.TilingSprite {
     findSameItemWarehouse(ship: Ship, id: number) {
         let warehouse: Room;
         // 既に同じアイテムが倉庫に格納されていて、空きがある場合を探す
-        for (let i = 0; i < ship.warehouses.length; i++) {
-            for (let j = 0; j < ship.warehouses[i].itemlist.length; j++) {// アイテムが格納できるかどうか調べる
-                if (ship.warehouses[i].itemlist[j].id == id && ship.warehouses[i].itemlist[j].num <= this.max - 1) {
-                    warehouse = ship.warehouses[i];
+        for (let i = 0; i < Ship.warehouses.length; i++) {
+            for (let j = 0; j < Ship.warehouses[i].itemlist.length; j++) {// アイテムが格納できるかどうか調べる
+                if (Ship.warehouses[i].itemlist[j].id == id && Ship.warehouses[i].itemlist[j].num <= this.max - 1) {
+                    warehouse = Ship.warehouses[i];
                     break;
                 }
             }
@@ -109,9 +113,9 @@ export class Item extends PIXI.TilingSprite {
     // 空きのある倉庫を探す
     findEmptyWarehouse(ship: Ship) {
         let warehouse: Room;
-        for (let i = 0; i < ship.warehouses.length; i++) {
-            if (ship.warehouses[i].itemlist.length < ship.warehouses[i].kind) {// 倉庫があり、空きがある場合
-                warehouse = ship.warehouses[i];
+        for (let i = 0; i < Ship.warehouses.length; i++) {
+            if (Ship.warehouses[i].itemlist.length < Ship.warehouses[i].kind) {// 倉庫があり、空きがある場合
+                warehouse = Ship.warehouses[i];
                 break;
             }
         }
@@ -127,10 +131,8 @@ export class Item extends PIXI.TilingSprite {
                 if (warehouse.itemlist[i].num + item.num > item.max) {//アイテムがあふれた場合
                     ship.makeItem(ship, warehouse.x, warehouse.y, item.id, warehouse.itemlist[i].num + item.num - item.max, 'in');
                     warehouse.itemlist[i].num = item.max;
-                    console.log("bbb");
                 } else {//アイテムが溢れない場合
                     warehouse.itemlist[i].num += item.num;
-                    console.log(warehouse.itemlist);
                 }
                 listed = true;
                 item.removeItem();
