@@ -13,6 +13,7 @@ export class Room_warehouse extends Room {
         super(2, x, y, PIXI.Loader.shared.resources.room_warehouse.texture, gamescene, state);
         this.x = x;// 部屋のｘ座標
         this.y = y;// 部屋のｙ座標
+        this.kind = 15;
         this.on("pointerdown", () => {
             PIXI.Loader.shared.resources.open.sound.play();
             this.oneLayerWindow.visible = true;
@@ -23,7 +24,7 @@ export class Room_warehouse extends Room {
             this.tilePosition.x = 0;
         })
         this.oneLayerWindow.text.position.set(64, 32);
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < 15; i++) {
             this.displayItems.push(new Item(32 + 16, (i + 1) * 32 + 16, 0, 1, 'display'));
             this.oneLayerWindow.addChild(this.displayItems[i]);
         }

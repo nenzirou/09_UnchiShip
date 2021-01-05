@@ -100,6 +100,7 @@ export class Room_work extends Room {
                                     oji.visible = false;
                                     this.ojiID.push(oji.id);
                                     this.state = 'using'
+                                    console.log(this.itemlist);
                                     this.itemlist = [];
                                     this.makeCnt = 60 * 10;
                                 });
@@ -116,7 +117,6 @@ export class Room_work extends Room {
                         Room.allFreeOji(ship.ojis, this.ojiID);
                         this.ojiID = [];
                         Ship.makeItem(ship, this.x, this.y, this.makingItem, 1, 'made');
-                        console.log("できた");
                         if (this.loop) {
                             this.startMakeItem(this.makingItem);
                         } else {

@@ -25,6 +25,8 @@ export class Ship extends PIXI.Container {
     ojis: Ojisan[] = new Array();//全おじさんを入れる
     freeOjis: Ojisan[] = new Array();//フリーなおじさんを入れる
     items: Item[] = new Array();//全アイテムを入れる
+    rocket: PIXI.TilingSprite;//ロケット外観
+    scaleButton: Button;//拡大縮小を行うボタン
     makingRoomId: number;//作る部屋
     makingRoomButton: Button;//部屋を作るボタン
     makingRoomOneLayerWindow: TextWindow;//第1層ウィンドウ
@@ -37,7 +39,8 @@ export class Ship extends PIXI.Container {
     clickPosition: PIXI.Point;//クリックされた座標
     clickCursor: PIXI.Graphics;//部屋選択のカーソル
     selected: boolean;//決定されたかどうか
-    makableItem: boolean = true;
+    makableItem: boolean = true;//アイテムを生成するかどうか決定
+    enlargement: boolean = false;//拡大しているかどうか
     cnt: number = 0;
     rW: number = 8;
     rH: number = 10;
@@ -72,6 +75,34 @@ export class Ship extends PIXI.Container {
     constructor(x: number, y: number, width: number, height: number, gamescene: PIXI.Container) {
         super();
         const tl = gsap.timeline();//タイムライン初期化
+        this.clickPosition = new PIXI.Point(0, 0);//クリック座標を初期化
+        this.x = x;// 船全体のｘ座標
+        this.y = y;// 船全体のｙ座標
+        this.w = width;
+        this.h = height;
+        this.gamescene = gamescene;
+        this.sortableChildren = true;
+        //ロケットの外観を作成
+        this.rocket = new PIXI.TilingSprite(PIXI.Loader.shared.resources.rocket.texture, 700, 800);
+        this.rocket.position.set(-150, -200);
+        this.rocket.zIndex = 100;
+        this.rocket.interactive = true;
+        this.rocket.visible = false;
+        this.addChild(this.rocket);
+        this.scaleButton = new Button("拡大縮小", 100, 50, this.w - 100, this.h + 50, 0, 0x0000ff, 24, 1);//ルーム作成ボタン
+        this.scaleButton.on('click', () => {
+            if (this.enlargement) {
+                tl.to(this.scale, { duration: 0.2, x: 1, y: 1 })
+                    .to(this.rocket, { duration: 0.2, alpha: 0 })
+                    .call(() => { this.rocket.visible = false; this.rocket.alpha = 1;});
+            } else {
+                tl.call(() => { this.rocket.visible = true; })
+                    .to(this.scale, { duration: 0.2, x: 0.5, y: 0.5 })
+                    .from(this.rocket, { duration: 0.2, alpha: 0 });
+            }
+            this.enlargement = !this.enlargement;
+        });
+        gamescene.addChild(this.scaleButton);
         //クリックされたときの処理
         this.on('click', (e: PIXI.InteractionEvent) => {
             let position = e.data.getLocalPosition(this);
@@ -83,13 +114,7 @@ export class Ship extends PIXI.Container {
                 tl.to(this.clickCursor, { duration: 0.05, x: this.clickPosition.x, y: this.clickPosition.y });
             }
         })
-        this.clickPosition = new PIXI.Point(0, 0);//クリック座標を初期化
-        this.x = x;// 船全体のｘ座標
-        this.y = y;// 船全体のｙ座標
-        this.w = width;
-        this.h = height;
-        this.gamescene = gamescene;
-        this.sortableChildren = true;
+
         //カーソル生成
         this.clickCursor = new PIXI.Graphics();
         this.clickCursor.lineStyle(2, 0xcc0000);
@@ -102,12 +127,10 @@ export class Ship extends PIXI.Container {
         this.makingRoomOneLayerWindow = new TextWindow(0, 0, 1, 1, 1, 0.8, false);//ルーム作成第１ウィンドウ
         this.makingRoomOneLayerBack = Room.makeBackButton(0, 0, this.makingRoomOneLayerWindow);//第1層戻るボタン作成
         this.makingRoomOneLayerBack.on('click', () => {//第1層戻るボタンの処理
-            for (let j = 0; j < this.makingRoomTwoLayerWindows.length; j++) {
-                this.makingRoomTwoLayerWindows[j].visible = false;
-            }
+            Room.changeVisual(this.makingRoomTwoLayerWindows, false);
         })
         gamescene.addChild(this.makingRoomOneLayerWindow);//ルーム作成第1ウィンドウを登録
-        this.makingRoomButton.on('pointerup', () => {//ルーム作成ボタンの挙動
+        this.makingRoomButton.on('click', () => {//ルーム作成ボタンの挙動
             PIXI.Loader.shared.resources.open.sound.play();
             this.makingRoomOneLayerWindow.visible = true;
         });
@@ -160,9 +183,7 @@ export class Ship extends PIXI.Container {
                 PIXI.Loader.shared.resources.open.sound.play();
                 //ウィンドウを閉じる処理
                 this.makingRoomOneLayerWindow.visible = false;
-                for (let j = 0; j < this.makingRoomTwoLayerWindows.length; j++) {
-                    this.makingRoomTwoLayerWindows[j].visible = false;
-                }
+                Room.changeVisual(this.makingRoomTwoLayerWindows, false);
                 gamescene.addChild(Button.makeSpeech("部屋を立てる場所を選んでください。", 5, 400, 32, 0, 200, 1, 22, 0.8));
                 //選ぶ処理
                 for (let j = 0; j < this.rooms.length; j++) {//全ての部屋をタッチできなくする

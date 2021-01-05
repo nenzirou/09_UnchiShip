@@ -38,6 +38,7 @@ export abstract class Room extends PIXI.TilingSprite {
     kind: number = 4;// 倉庫のアイテムを入れられる種類
     itemlist: itemList[] = [];//この部屋に格納されているアイテムリスト
     needItems: number[] = [];//欲しいものリスト
+    defoltTexture: PIXI.Texture;
     id: number;
     level: number = 0;
     state: stringRoomState;
@@ -48,6 +49,7 @@ export abstract class Room extends PIXI.TilingSprite {
     ojiMax: number = 4;// おじさんを入れられる最大数
     constructor(id: number, x: number, y: number, texture: PIXI.Texture, gamescene: PIXI.Container, state: stringRoomState) {
         super(texture, 50, 50);
+        this.defoltTexture = texture;
         this.state = state;
         if (this.state === 'build') this.build = false;
         else this.build = true;
@@ -61,13 +63,16 @@ export abstract class Room extends PIXI.TilingSprite {
         this.interactive = true;
         this.buttonMode = true;
     }
+    //部屋のアイテムリストにアイテムを追加する
     pushItemlist(id: number, num: number) {
         let tmp: itemList = { id: id, num: num };
         this.itemlist.push(tmp);
     }
+    //距離を測る
     static len(x1: number, y1: number, x2: number, y2: number) {
         return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)) + 1;
     }
+    //おじさんに指定したアイテムをくっつける
     static stickItemToOji(oji: Ojisan, id: number) {
         let item = new Item(0, 0, id, 1, 'transporting');
         item.scale.set(Item.size);
@@ -121,8 +126,8 @@ export abstract class Room extends PIXI.TilingSprite {
         if (oji === undefined) return false;
         oji.state = 'transport';
         oji.tl
-            .to(oji, { duration: Room.len(oji.x, oji.y, warehouse.x, warehouse.y) / oji.speed, x: warehouse.x, y: warehouse.y })
-            .call(() => {
+            .to(oji, { duration: Room.len(oji.x, oji.y, warehouse.x, warehouse.y) / oji.speed, x: warehouse.x, y: warehouse.y })//倉庫に向かう
+            .call(() => {//おじさんが倉庫からアイテムを取りだす処理
                 let tmp = Room.judgeHavingItem(warehouse.itemlist, id, 1);
                 if (tmp != -1) {//おじさんが倉庫にたどり着いた時にアイテムが格納されている場合
                     PIXI.Loader.shared.resources.open.sound.play();
@@ -132,13 +137,14 @@ export abstract class Room extends PIXI.TilingSprite {
                     Room.freeOji(oji);
                 }
             })
-            .to(oji, { duration: Room.len(room.x, room.y, warehouse.x, warehouse.y) / oji.speed, x: room.x, y: room.y })
-            .call(() => {
-                let judge =false;
+            .to(oji, { duration: Room.len(room.x, room.y, warehouse.x, warehouse.y) / oji.speed, x: room.x, y: room.y })//対称の部屋に向かう
+            .call(() => {//持ってきたアイテムを格納する処理
+                let judge = false;
                 for (let i = 0; i < room.needItems.length; i++) {
                     if (room.needItems[i] == id) {//欲しいものリストに持ってきたアイテムがあったら
                         judge = true;
                         room.needItems.splice(i, 1);
+                        break;
                     }
                 }
                 if (judge) {//欲しいものリストにアイテムが載っていた場合、格納する
@@ -149,13 +155,13 @@ export abstract class Room extends PIXI.TilingSprite {
                         room.pushItemlist(id, 1);
                     }
                 } else {//欲しいものリストにアイテムが載っていなかった場合、アイテムはその辺に置く
-                    Ship.makeItem(ship, warehouse.x, warehouse.y, id, 1, 'in');
+                    Ship.makeItem(ship, room.x, room.y, id, 1, 'in');
                 }
                 Room.freeOji(oji);
             });
         return true;
     }
-    //倉庫から指定したアイテムを探す
+    //倉庫から指定したアイテムを探し、アイテムがあればそれが格納されている倉庫を返す
     static findItemFromWarehouse(ship: Ship, id: number) {
         let tmp: number;
         for (let i = 0; i < Ship.warehouses.length; i++) {//倉庫全部調べる
@@ -190,12 +196,11 @@ export abstract class Room extends PIXI.TilingSprite {
         }
     }
     //スプライトの表示非表示を決定する
-    static changeVisual(obj: PIXI.TilingSprite[], visual: boolean) {
+    static changeVisual(obj: TextWindow[], visual: boolean) {
         for (let i = 0; i < obj.length; i++) {
             obj[i].visible = visual;
         }
     }
-
     //idからおじさんを探す
     static findOjisan(ojis: Ojisan[], id: number) {
         for (let i = 0; i < ojis.length; i++) {
@@ -248,6 +253,7 @@ export abstract class Room extends PIXI.TilingSprite {
     //毎フレーム実行される 建築状態になったらアイテムを集めて建築を行う
     buildRoom(ship: Ship) {
         if (this.state === 'build') {
+            this.texture = PIXI.Loader.shared.resources.room_building.texture;
             this.state = 'build_gathering';
             this.interactive = false;
             this.cnt = 0;
@@ -260,15 +266,15 @@ export abstract class Room extends PIXI.TilingSprite {
             for (let i = 0; i < needItemlist.length; i++) {
                 if (Room.judgeHavingItem(this.itemlist, needItemlist[i][0], needItemlist[i][1]) == -1) judge = false;
             }
-            if (true) {
+            if (judge) {//部屋の倉庫に部屋を作るためのアイテムが揃っていた場合
                 //近くのフリーおじさんを見つける
                 let oji = Room.findNearFreeOji(ship, this.x, this.y);
                 if (oji !== undefined) {
                     this.state = 'build_preparation';
                     oji.state = 'working';
                     oji.tl
-                        .to(oji, { duration: Room.len(oji.x, oji.y, this.x, this.y) / oji.speed + 0.01, x: this.x, y: this.y })
-                        .call(() => {
+                        .to(oji, { duration: Room.len(oji.x, oji.y, this.x, this.y) / oji.speed + 0.01, x: this.x, y: this.y })//部屋に向かう
+                        .call(() => {//部屋を作成する処理
                             oji.visible = false;
                             this.ojiID.push(oji.id);
                             this.state = 'build_using'
@@ -283,12 +289,14 @@ export abstract class Room extends PIXI.TilingSprite {
                 if (this.tilePosition.x == 0) this.tilePosition.x += 50;
             }
             if (this.makeCnt <= 0) {
+                this.texture = this.defoltTexture;
                 this.tilePosition.x = 0;
                 this.state = 'free';
                 Room.allFreeOji(ship.ojis, this.ojiID);
                 this.ojiID = [];
                 this.interactive = true;
                 this.build = true;
+                ship.addChild(Button.makeSpeech(Room.roomList[this.id] + "が完成した！", 3, 400, 50, 0, 200, 1, 20, 0.8));
             }
             this.makeCnt--;
         }
@@ -303,7 +311,7 @@ export abstract class Room extends PIXI.TilingSprite {
         }
     }
     //リストにあるアイテムが全てあるかどうかを調べる
-    static jusgeFullList(needItemList:itemList[],curItemList:itemList[]) {
+    static jusgeFullList(needItemList: itemList[], curItemList: itemList[]) {
         let judge: boolean = true;
         for (let i = 0; i < needItemList.length; i++) {
             if (Room.judgeHavingItem(curItemList, needItemList[i][0], needItemList[i][1]) == -1) judge = false;
