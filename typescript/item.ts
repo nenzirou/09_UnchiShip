@@ -129,7 +129,7 @@ export class Item extends PIXI.TilingSprite {
         for (let i = 0; i < warehouse.itemlist.length; i++) {
             if (warehouse.itemlist[i].id == item.id && warehouse.itemlist[i].num <= item.max - 1) {
                 if (warehouse.itemlist[i].num + item.num > item.max) {//アイテムがあふれた場合
-                    ship.makeItem(ship, warehouse.x, warehouse.y, item.id, warehouse.itemlist[i].num + item.num - item.max, 'in');
+                    Ship.makeItem(ship, warehouse.x, warehouse.y, item.id, warehouse.itemlist[i].num + item.num - item.max, 'in');
                     warehouse.itemlist[i].num = item.max;
                 } else {//アイテムが溢れない場合
                     warehouse.itemlist[i].num += item.num;

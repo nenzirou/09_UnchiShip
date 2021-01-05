@@ -9,6 +9,7 @@ import { Room_bed } from "./room_bed";
 import { Ojisan } from "./ojisan";
 import { Item } from "./item";
 import { stringInOut } from "./item";
+import { stringRoomState } from "./room";
 import { Button } from "./button";
 import { TextWindow } from "./window";
 import { MyText } from "./text";
@@ -36,6 +37,7 @@ export class Ship extends PIXI.Container {
     clickPosition: PIXI.Point;//クリックされた座標
     clickCursor: PIXI.Graphics;//部屋選択のカーソル
     selected: boolean;//決定されたかどうか
+    makableItem: boolean = true;
     cnt: number = 0;
     rW: number = 8;
     rH: number = 10;
@@ -55,10 +57,21 @@ export class Ship extends PIXI.Container {
         [0, 2, 2, 2, 2, 2, 2, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
     ];
+    // initialRoom: number[][] = [
+    //     [0, 0, 0, 0, 0, 0, 0, 0],
+    //     [0, 0, 0, 0, 0, 0, 0, 0],
+    //     [0, 0, 0, 0, 0, 0, 0, 0],
+    //     [0, 0, 0, 0, 0, 0, 0, 0],
+    //     [0, 0, 0, 0, 0, 0, 0, 0],
+    //     [0, 0, 0, 0, 0, 0, 0, 0],
+    //     [0, 0, 0, 0, 0, 0, 0, 0],
+    //     [0, 0, 0, 0, 0, 0, 0, 0],
+    //     [0, 2, 0, 0, 0, 0, 0, 0],
+    //     [0, 0, 0, 0, 0, 0, 0, 0],
+    // ];
     constructor(x: number, y: number, width: number, height: number, gamescene: PIXI.Container) {
         super();
         const tl = gsap.timeline();//タイムライン初期化
-        this.interactive = true;
         //クリックされたときの処理
         this.on('click', (e: PIXI.InteractionEvent) => {
             let position = e.data.getLocalPosition(this);
@@ -164,7 +177,7 @@ export class Ship extends PIXI.Container {
         // 船の部屋生成
         for (let i = 0; i < this.rH; i++) {
             for (let j = 0; j < this.rW; j++) {
-                let room = Ship.makeRoom(this, j * 50 + 25, i * 50 + 25, this.initialRoom[i][j], gamescene);
+                let room = Ship.makeRoom(j * 50 + 25, i * 50 + 25, this.initialRoom[i][j], gamescene, 'free');
                 this.addChild(room);
                 this.rooms.push(room);
             }
@@ -181,7 +194,7 @@ export class Ship extends PIXI.Container {
         //ルーム作成で部屋を作る場所を選ぶ時の処理
         if (this.selected) {
             this.removeChild(this.rooms[(this.clickPosition.y / 50) * this.rW + (this.clickPosition.x / 50)]);
-            this.rooms[(this.clickPosition.y / 50) * this.rW + (this.clickPosition.x / 50)] = Ship.makeRoom(this, this.clickPosition.x + 25, this.clickPosition.y + 25, this.makingRoomId, this.gamescene);//部屋作成
+            this.rooms[(this.clickPosition.y / 50) * this.rW + (this.clickPosition.x / 50)] = Ship.makeRoom(this.clickPosition.x + 25, this.clickPosition.y + 25, this.makingRoomId, this.gamescene, 'build');//部屋作成
             this.addChild(this.rooms[(this.clickPosition.y / 50) * this.rW + (this.clickPosition.x / 50)]);
             this.selected = false;
             this.interactive = false;
@@ -215,7 +228,7 @@ export class Ship extends PIXI.Container {
             }
         }
         // アイテムを生成する
-        if (this.cnt % 20 == 30) {
+        if (this.cnt % 20 == 0 && this.makableItem) {
             Ship.makeItem(this, this.w, -100, Math.floor(Math.random() * 2) + 1, 1, 'out');
         }
         if (this.cnt == 0) {
@@ -274,23 +287,23 @@ export class Ship extends PIXI.Container {
         ship.addChild(item);
         ship.items.push(item);
     }
-    static makeRoom(ship: Ship, x: number, y: number, id: number, gamescene: PIXI.Container) {
+    static makeRoom(x: number, y: number, id: number, gamescene: PIXI.Container, state: stringRoomState) {
         let room: Room;
         switch (id) {
             case 0: {
-                room = new Room_wall(x, y, gamescene); break;
+                room = new Room_wall(x, y, gamescene, state); break;
             }
             case 1: {
-                room = new Room_aisle(x, y, gamescene); break;
+                room = new Room_aisle(x, y, gamescene, state); break;
             }
             case 2: {
-                room = new Room_warehouse(x, y, gamescene); break;
+                room = new Room_warehouse(x, y, gamescene, state); break;
             }
             case 3: {
-                room = new Room_bed(x, y, gamescene); break;
+                room = new Room_bed(x, y, gamescene, state); break;
             }
             case 4: {
-                room = new Room_work(x, y, gamescene); break;
+                room = new Room_work(x, y, gamescene, state); break;
             }
         }
         return room;

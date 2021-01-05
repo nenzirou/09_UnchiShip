@@ -20,7 +20,7 @@ interface itemList {
     id: number;
     num: number;
 }
-type stringRoomState = 'free' | 'using' | 'gathering' | 'preparation';
+export type stringRoomState = 'free' | 'using' | 'gathering' | 'preparation' | 'build' | 'build_gathering' | 'build_preparation' | 'build_using';
 export abstract class Room extends PIXI.TilingSprite {
     static roomList = { 0: '壁', 1: '通路', 2: '倉庫', 3: 'ベッド', 4: '作業場' };
     static roomMakeList = { /*倉庫*/2: [[1, 1], [2, 1]], /*ベッド*/3: [[3, 1], [4, 3]], /*作業場*/4: [[4, 2], [5, 2]] };
@@ -31,7 +31,7 @@ export abstract class Room extends PIXI.TilingSprite {
     twoLayerWindows: TextWindow[] = [];//第２層のウィンドウ
     twoLayerBacks: PIXI.Container[] = [];//第２層ウィンドウの戻るボタン
     twoLayerItems: Item[] = [];//第２層のアイテムアイコン
-
+    build: boolean;//建てられたかどうか
     makingItem: number = 0;
     makeCnt: number = 0;
     loop: boolean = true;
@@ -40,14 +40,17 @@ export abstract class Room extends PIXI.TilingSprite {
     needItems: number[] = [];//欲しいものリスト
     id: number;
     level: number = 0;
-    state: stringRoomState = "free";
+    state: stringRoomState;
     rNx: number;// 行番号
     rNy: number;// 列番号
     cnt: number = 0;// タイムカウント
     ojiID: number[] = [];//この部屋にいるおじさんのIDリスト
     ojiMax: number = 4;// おじさんを入れられる最大数
-    constructor(id: number, x: number, y: number, texture: PIXI.Texture, gamescene: PIXI.Container) {
+    constructor(id: number, x: number, y: number, texture: PIXI.Texture, gamescene: PIXI.Container, state: stringRoomState) {
         super(texture, 50, 50);
+        this.state = state;
+        if (this.state === 'build') this.build = false;
+        else this.build = true;
         this.id = id;//部屋のID
         this.anchor.set(0.5);//ローカル座標の始点を真ん中にする
         this.x = x;// 部屋のｘ座標
@@ -112,37 +115,41 @@ export abstract class Room extends PIXI.TilingSprite {
     //必要なアイテムを探し、集める
     static gatherItem(ship: Ship, room: Room, id: number) {
         if (ship.freeOjis.length == 0) return false;
-        let warehouse: Room = Room.findItemFromWarehouse(ship, id);
+        const warehouse: Room = Room.findItemFromWarehouse(ship, id);
         if (warehouse === undefined) return false;
-        let oji = Room.findNearFreeOji(ship, room.x, room.y);
+        const oji = Room.findNearFreeOji(ship, room.x, room.y);
         if (oji === undefined) return false;
         oji.state = 'transport';
-        let ojiToWarehouse = Room.len(oji.x, oji.y, warehouse.x, warehouse.y);
-        let warehouseToRoom = Room.len(room.x, room.y, warehouse.x, warehouse.y);
         oji.tl
-            .to(oji, { duration: ojiToWarehouse / oji.speed, x: warehouse.x, y: warehouse.y })
+            .to(oji, { duration: Room.len(oji.x, oji.y, warehouse.x, warehouse.y) / oji.speed, x: warehouse.x, y: warehouse.y })
             .call(() => {
                 let tmp = Room.judgeHavingItem(warehouse.itemlist, id, 1);
                 if (tmp != -1) {//おじさんが倉庫にたどり着いた時にアイテムが格納されている場合
+                    PIXI.Loader.shared.resources.open.sound.play();
                     warehouse.itemlist[tmp].num--;
                     Room.stickItemToOji(oji, id);
-                    PIXI.Loader.shared.resources.open.sound.play();
-                } else {
+                } else {//おじさんがたどり着いた頃にはもう必要なアイテムは倉庫になかった場合
                     Room.freeOji(oji);
                 }
             })
-            .to(oji, { duration: warehouseToRoom / oji.speed, x: room.x, y: room.y })
+            .to(oji, { duration: Room.len(room.x, room.y, warehouse.x, warehouse.y) / oji.speed, x: room.x, y: room.y })
             .call(() => {
-                let tmp = Room.judgeHavingItem(room.itemlist, id, 1);
-                if (tmp != -1) {
-                    room.itemlist[tmp].num++;
-                } else {
-                    room.pushItemlist(id, 1);
-                }
+                let judge =false;
                 for (let i = 0; i < room.needItems.length; i++) {
-                    if (room.needItems[i] == id) {//欲しいものリストから取り除く
+                    if (room.needItems[i] == id) {//欲しいものリストに持ってきたアイテムがあったら
+                        judge = true;
                         room.needItems.splice(i, 1);
                     }
+                }
+                if (judge) {//欲しいものリストにアイテムが載っていた場合、格納する
+                    let tmp = Room.judgeHavingItem(room.itemlist, id, 1);
+                    if (tmp != -1) {
+                        room.itemlist[tmp].num++;
+                    } else {
+                        room.pushItemlist(id, 1);
+                    }
+                } else {//欲しいものリストにアイテムが載っていなかった場合、アイテムはその辺に置く
+                    Ship.makeItem(ship, warehouse.x, warehouse.y, id, 1, 'in');
                 }
                 Room.freeOji(oji);
             });
@@ -237,6 +244,71 @@ export abstract class Room extends PIXI.TilingSprite {
         }
         parent.addChild(item);
         return item;
+    }
+    //毎フレーム実行される 建築状態になったらアイテムを集めて建築を行う
+    buildRoom(ship: Ship) {
+        if (this.state === 'build') {
+            this.state = 'build_gathering';
+            this.interactive = false;
+            this.cnt = 0;
+            this.needItems = Room.listOfItemToNeedList(Room.roomMakeList[this.id]);//必要リストに素材を追加
+        }
+        if (this.makingItem == 0 && this.needItems.length == 0 && this.state === 'build_gathering') {
+            //アイテムがRoomの倉庫に揃っているかどうかを調べる
+            const needItemlist = Room.roomMakeList[this.id];//[[],[]]型がくる
+            let judge: boolean = true;
+            for (let i = 0; i < needItemlist.length; i++) {
+                if (Room.judgeHavingItem(this.itemlist, needItemlist[i][0], needItemlist[i][1]) == -1) judge = false;
+            }
+            if (true) {
+                //近くのフリーおじさんを見つける
+                let oji = Room.findNearFreeOji(ship, this.x, this.y);
+                if (oji !== undefined) {
+                    this.state = 'build_preparation';
+                    oji.state = 'working';
+                    oji.tl
+                        .to(oji, { duration: Room.len(oji.x, oji.y, this.x, this.y) / oji.speed + 0.01, x: this.x, y: this.y })
+                        .call(() => {
+                            oji.visible = false;
+                            this.ojiID.push(oji.id);
+                            this.state = 'build_using'
+                            this.itemlist = [];
+                            this.makeCnt = 60 * 10;
+                        });
+                }
+            }
+        } else if (this.state === 'build_using') {
+            if (this.makeCnt % 60 == 0) {
+                this.tilePosition.x = (this.tilePosition.x + 50) % 150;
+                if (this.tilePosition.x == 0) this.tilePosition.x += 50;
+            }
+            if (this.makeCnt <= 0) {
+                this.tilePosition.x = 0;
+                this.state = 'free';
+                Room.allFreeOji(ship.ojis, this.ojiID);
+                this.ojiID = [];
+                this.interactive = true;
+                this.build = true;
+            }
+            this.makeCnt--;
+        }
+    }
+    //必要リストに載っているアイテムを集める
+    gatherNeedItem(ship: Ship) {
+        //必要素材リストに載っているアイテムを集める
+        if (this.cnt % 300 == 0) {
+            for (let i = 0; i < this.needItems.length; i++) {
+                Room.gatherItem(ship, this, this.needItems[i]);
+            }
+        }
+    }
+    //リストにあるアイテムが全てあるかどうかを調べる
+    static jusgeFullList(needItemList:itemList[],curItemList:itemList[]) {
+        let judge: boolean = true;
+        for (let i = 0; i < needItemList.length; i++) {
+            if (Room.judgeHavingItem(curItemList, needItemList[i][0], needItemList[i][1]) == -1) judge = false;
+        }
+        return judge;
     }
     abstract move(ship: Ship);
 }

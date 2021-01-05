@@ -10,8 +10,8 @@ import { MyText } from "./text";
 */
 export class Room_work extends Room {
     static makableItems: number[] = [1, 2, 3, 4, 5];
-    constructor(x: number, y: number, gamescene: PIXI.Container) {
-        super(4, x, y, PIXI.Loader.shared.resources.room_work.texture, gamescene);
+    constructor(x: number, y: number, gamescene: PIXI.Container,state) {
+        super(4, x, y, PIXI.Loader.shared.resources.room_work.texture, gamescene,state);
         //状態表示テキストの設定 デバッグ用
         this.stateText = new MyText(100, 0, 1, 32, 32, 0x333333);
         this.oneLayerWindow.addChild(this.stateText);
@@ -62,79 +62,72 @@ export class Room_work extends Room {
         }
     }
     move(ship: Ship) {
-        //テキスト更新
-        if (this.oneLayerWindow.visible) {//第1層テキスト更新
-            this.stateText.text = "" + this.state;
-            let text = '';
-            for (let i = 0; i < Room_work.makableItems.length; i++) {
-                text += Item.itemList[Room_work.makableItems[i]] + '(' + Room.countItemNum(Ship.warehouses, Room_work.makableItems[i]) + ')を作成\n';
-            }
-            this.oneLayerWindow.setText(text);
-        }
-        for (let i = 0; i < this.twoLayerWindows.length; i++) {//第2層テキスト更新
-            if (this.twoLayerWindows[i].visible) {
-                let itemlist = Item.itemMakeList[Room_work.makableItems[i]];//[[],[]]型がくる
-                //必要素材の必要数を表示するテキストを設定
-                let needItemText = "必要素材\n";
-                for (let j = 0; j < itemlist.length; j++) {
-                    needItemText += "　 " + Item.itemList[itemlist[j][0]] + "×" + itemlist[j][1] + "(" + Room.countItemNum(Ship.warehouses, itemlist[j][0]) + ")\n";
+        this.buildRoom(ship);//部屋を立ててくれる関数
+        this.gatherNeedItem(ship);//必要なアイテムを自動で集めてくれる関数
+        if (this.build) {
+            //テキスト更新
+            if (this.oneLayerWindow.visible) {//第1層テキスト更新
+                this.stateText.text = "" + this.state;
+                let text = '';
+                for (let i = 0; i < Room_work.makableItems.length; i++) {
+                    text += Item.itemList[Room_work.makableItems[i]] + '(' + Room.countItemNum(Ship.warehouses, Room_work.makableItems[i]) + ')を作成\n';
                 }
-                this.twoLayerWindows[i].setText(needItemText);
+                this.oneLayerWindow.setText(text);
             }
-        }
-        //アイテム作成処理
-        if (this.makingItem != 0) {
-            if (this.cnt % 300 == 0) {
-                for (let i = 0; i < this.needItems.length; i++) {
-                    Room.gatherItem(ship, this, this.needItems[i]);
-                }
-            }
-            //アイテムが揃ったらアイテム作成開始
-            if (this.needItems.length == 0 && this.state === 'gathering') {
-                //アイテムがRoomの倉庫に揃っているかどうかを調べる
-                let needItemlist = Item.itemMakeList[this.makingItem];//[[],[]]型がくる
-                let judge: boolean = true;
-                for (let i = 0; i < needItemlist.length; i++) {
-                    if (!Room.judgeHavingItem(this.itemlist, needItemlist[i][0], needItemlist[i][1])) judge = false;
-                }
-                if (true) {
-                    //近くのフリーおじさんを見つける
-                    let oji = Room.findNearFreeOji(ship, this.x, this.y);
-                    if (oji !== undefined) {
-                        this.state = 'preparation';
-                        oji.state = 'working';
-                        oji.tl
-                            .to(oji, { duration: Room.len(oji.x, oji.y, this.x, this.y) / oji.speed + 0.01, x: this.x, y: this.y })
-                            .call(() => {
-                                oji.visible = false;
-                                this.ojiID.push(oji.id);
-                                this.state = 'using'
-                                this.itemlist = [];
-                                this.makeCnt = 60 * 10;
-                            });
+            for (let i = 0; i < this.twoLayerWindows.length; i++) {//第2層テキスト更新
+                if (this.twoLayerWindows[i].visible) {
+                    let itemlist = Item.itemMakeList[Room_work.makableItems[i]];//[[],[]]型がくる
+                    //必要素材の必要数を表示するテキストを設定
+                    let needItemText = "必要素材\n";
+                    for (let j = 0; j < itemlist.length; j++) {
+                        needItemText += "　 " + Item.itemList[itemlist[j][0]] + "×" + itemlist[j][1] + "(" + Room.countItemNum(Ship.warehouses, itemlist[j][0]) + ")\n";
                     }
+                    this.twoLayerWindows[i].setText(needItemText);
                 }
-            } else if (this.state === 'using') {
-                if (this.makeCnt % 60 == 0) {
-                    this.tilePosition.x = (this.tilePosition.x + 50) % 150;
-                    if (this.tilePosition.x == 0) this.tilePosition.x += 50;
-                }
-                if (this.makeCnt <= 0) {
-                    this.tilePosition.x = 0;
-                    this.state = 'free';
-                    Room.allFreeOji(ship.ojis, this.ojiID);
-                    this.ojiID = [];
-                    ship.makeItem(ship, this.x, this.y, this.makingItem, 1, 'made');
-                    if (this.loop) {
-                        this.startMakeItem(this.makingItem);
-                    } else {
-                        this.makingItem = 0;
-                    }
-                }
-                this.makeCnt--;
             }
+            //アイテム作成処理
+            if (this.makingItem != 0) {
+                //アイテムが揃ったらアイテム作成開始
+                if (this.needItems.length == 0 && this.state === 'gathering') {
+                    if (Room.jusgeFullList(Item.itemMakeList[this.makingItem], this.itemlist)) {//欲しいアイテムがRoomのItemListに揃っている場合
+                        let oji = Room.findNearFreeOji(ship, this.x, this.y);//近くのフリーおじさんを見つける
+                        if (oji !== undefined) {//フリーおじさんがいた場合
+                            this.state = 'preparation';
+                            oji.state = 'working';
+                            oji.tl
+                                .to(oji, { duration: Room.len(oji.x, oji.y, this.x, this.y) / oji.speed + 0.01, x: this.x, y: this.y })
+                                .call(() => {
+                                    oji.visible = false;
+                                    this.ojiID.push(oji.id);
+                                    this.state = 'using'
+                                    this.itemlist = [];
+                                    this.makeCnt = 60 * 10;
+                                });
+                        }
+                    }
+                } else if (this.state === 'using') {
+                    if (this.makeCnt % 60 == 0) {
+                        this.tilePosition.x = (this.tilePosition.x + 50) % 150;
+                        if (this.tilePosition.x == 0) this.tilePosition.x += 50;
+                    }
+                    if (this.makeCnt <= 0) {
+                        this.tilePosition.x = 0;
+                        this.state = 'free';
+                        Room.allFreeOji(ship.ojis, this.ojiID);
+                        this.ojiID = [];
+                        Ship.makeItem(ship, this.x, this.y, this.makingItem, 1, 'made');
+                        console.log("できた");
+                        if (this.loop) {
+                            this.startMakeItem(this.makingItem);
+                        } else {
+                            this.makingItem = 0;
+                        }
+                    }
+                    this.makeCnt--;
+                }
+            }
+            this.cnt++;
         }
-        this.cnt++;
     }
     startMakeItem(id: number) {
         if (this.state === 'free') {

@@ -9,8 +9,8 @@ import { Item } from "./item";
 
 export class Room_warehouse extends Room {
     displayItems: Item[] = [];
-    constructor(x: number, y: number, gamescene: PIXI.Container) {
-        super(2, x, y, PIXI.Loader.shared.resources.room_warehouse.texture, gamescene);
+    constructor(x: number, y: number, gamescene: PIXI.Container, state) {
+        super(2, x, y, PIXI.Loader.shared.resources.room_warehouse.texture, gamescene, state);
         this.x = x;// 部屋のｘ座標
         this.y = y;// 部屋のｙ座標
         this.on("pointerdown", () => {
@@ -29,23 +29,27 @@ export class Room_warehouse extends Room {
         }
     }
     move(ship: Ship) {
-        if (this.oneLayerWindow.visible) {
-            let text: string = "";
-            for (let i = 0; i < this.kind; i++) {
-                // 表示するアイテムのスプライト設定を行う
-                if (this.itemlist.length > i) {
-                    Item.changeItem(this.displayItems[i], this.itemlist[i].id);
-                } else {//余ったリストは全部透明スプライトにする
-                    Item.changeItem(this.displayItems[i], 0);
+        this.buildRoom(ship);//部屋を立ててくれる関数
+        this.gatherNeedItem(ship);//必要なアイテムを自動で集めてくれる関数
+        if (this.build) {
+            if (this.oneLayerWindow.visible) {
+                let text: string = "";
+                for (let i = 0; i < this.kind; i++) {
+                    // 表示するアイテムのスプライト設定を行う
+                    if (this.itemlist.length > i) {
+                        Item.changeItem(this.displayItems[i], this.itemlist[i].id);
+                    } else {//余ったリストは全部透明スプライトにする
+                        Item.changeItem(this.displayItems[i], 0);
+                    }
+                    // アイテムの格納個数の表示
+                    if (i < this.itemlist.length) {
+                        text += Item.returnItemName(this.itemlist[i].id) + "×" + this.itemlist[i].num + "\n";
+                    } else {
+                        text += "空き\n";
+                    }
                 }
-                // アイテムの格納個数の表示
-                if (i < this.itemlist.length) {
-                    text += Item.returnItemName(this.itemlist[i].id) + "×" + this.itemlist[i].num + "\n";
-                } else {
-                    text += "空き\n";
-                }
+                this.oneLayerWindow.setText(text);
             }
-            this.oneLayerWindow.setText(text);
         }
     }
 }
