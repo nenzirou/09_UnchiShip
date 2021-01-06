@@ -3,47 +3,150 @@ import { Ship } from "./ship";
 import { Ojisan } from "./ojisan";
 import { Room_warehouse } from "./room_warehouse";
 import { Room } from "./room";
+import { itemList } from "./room";
 import gsap from "gsap";
 /*
 itemに持たせる機能
 id
 */
 interface itemInfo {
-    name: number;//アイテムの名前
-    need: number[][];//アイテムを作るのに必要なアイテム
+    name: string;//アイテムの名前
+    need: itemList[];//アイテムを作るのに必要なアイテム
     num: number;//アイテムを作るとき何個できるか
+    buy: number;//アイテムの買値
+    sell: number;//アイテムの売値
 }
 export type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage' | 'display' | 'made';
 export class Item extends PIXI.TilingSprite {
-    static itemInfo = {
-        0: { name: '無', need: [], num: 1 },
-        1: { name: 'うんち', need: [], num: 1 },
-        2: { name: '粘土', need: [], num: 1 },
-        3: { name: '土器', need: [[2, 1], [5, 1]], num: 1 },
-        4: { name: 'レンガ', need: [[2, 2]], num: 1 },
-        5: { name: '水', need: [], num: 1 },
-        6: { name: 'スクラップ', need: [], num: 1 },
-        7: { name: '鉄板', need: [[6, 1]], num: 1 },
-        8: { name: 'ネジ', need: [[6, 1]], num: 1 },
-        9: { name: 'ドライバー', need: [[6, 1]], num: 1 },
-        10: { name: '砂', need: [[11, 1]], num: 1 },
-        11: { name: '岩', need: [], num: 1 },
-        12: { name: '枯れ枝', need: [], num: 1 },
-        13: { name: '木材', need: [[12, 2]], num: 1 },
-        14: { name: 'イス', need: [[13, 1]], num: 1 },
-        15: { name: '布切れ', need: [], num: 1 },
-        16: { name: '枕', need: [[15, 1]], num: 1 },
-        17: { name: 'ベッド', need: [[15, 1, 13, 4]], num: 1 },
-        18: { name: 'ドラム缶', need: [], num: 1 },
-        19: { name: '', need: [], num: 1 },
-    };
+    static itemInfo: itemInfo[] = [
+        {
+            name: '無',
+            need: [],
+            num: 1,
+            buy: 0,
+            sell: 0
+        }, {
+            name: 'うんち',
+            need: [],
+            num: 1,
+            buy: 0,
+            sell: 5
+        }, {
+            name: '粘土',
+            need: [],
+            num: 1,
+            buy: 0,
+            sell: 5
+        }, {
+            name: '土器',
+            need: [{ id: 2, num: 1 }, { id: 5, num: 1 }],
+            num: 1,
+            buy: 0,
+            sell: 50
+        }, {
+            name: 'レンガ',
+            need: [{ id: 2, num: 2 }],
+            num: 1,
+            buy: 0,
+            sell: 50
+        }, {
+            name: '水',
+            need: [],
+            num: 1,
+            buy: 0,
+            sell: 5
+        }, {
+            name: 'スクラップ',
+            need: [],
+            num: 1,
+            buy: 0,
+            sell: 5
+        }, {
+            name: '鉄板',
+            need: [{ id: 6, num: 1 }],
+            num: 1,
+            buy: 0,
+            sell: 50
+        }, {
+            name: 'ネジ',
+            need: [{ id: 6, num: 1 }],
+            num: 1,
+            buy: 0,
+            sell: 50
+        }, {
+            name: 'ドライバー',
+            need: [{ id: 6, num: 1 }],
+            num: 1,
+            buy: 0,
+            sell: 50
+        }, {
+            name: '砂',
+            need: [{ id: 11, num: 1 }],
+            num: 1,
+            buy: 0,
+            sell: 5
+        }, {
+            name: '岩',
+            need: [],
+            num: 1,
+            buy: 0,
+            sell: 5
+        }, {
+            name: '枯れ枝',
+            need: [],
+            num: 1,
+            buy: 0,
+            sell: 5
+        }, {
+            name: '木材',
+            need: [{ id: 12, num: 2 }],
+            num: 1,
+            buy: 0,
+            sell: 50
+        }, {
+            name: 'イス',
+            need: [{ id: 13, num: 1 }],
+            num: 1,
+            buy: 0,
+            sell: 50
+        }, {
+            name: '布切れ',
+            need: [],
+            num: 1,
+            buy: 0,
+            sell: 5
+        }, {
+            name: '枕',
+            need: [{ id: 15, num: 1 }],
+            num: 1,
+            buy: 0,
+            sell: 50
+        }, {
+            name: 'ベッド',
+            need: [{ id: 15, num: 1 }, { id: 13, num: 4 }],
+            num: 1,
+            buy: 0,
+            sell: 50
+        }, {
+            name: 'ドラム缶',
+            need: [],
+            num: 1,
+            buy: 0,
+            sell: 100
+        }, {
+            name: '',
+            need: [],
+            num: 1,
+            buy: 0,
+            sell: 0
+        },
+    ];
     num: number;
     cnt: number = 0;
     id: number = 0;
     state: stringInOut = 'in';
     max: number = 99;
     tl: TimelineMax;
-    explanation: string;
     static size: number = 0.6;
     constructor(x: number, y: number, id: number, num: number, state: stringInOut) {
         super(PIXI.Loader.shared.resources.item.texture, 32, 32);
@@ -124,10 +227,10 @@ export class Item extends PIXI.TilingSprite {
     findSameItemWarehouse(ship: Ship, id: number) {
         let warehouse: Room;
         // 既に同じアイテムが倉庫に格納されていて、空きがある場合を探す
-        for (let i = 0; i < Ship.warehouses.length; i++) {
-            for (let j = 0; j < Ship.warehouses[i].itemlist.length; j++) {// アイテムが格納できるかどうか調べる
-                if (Ship.warehouses[i].itemlist[j].id == id && Ship.warehouses[i].itemlist[j].num <= this.max - 1) {
-                    warehouse = Ship.warehouses[i];
+        for (let i = 0; i < ship.warehouses.length; i++) {
+            for (let j = 0; j < ship.warehouses[i].itemlist.length; j++) {// アイテムが格納できるかどうか調べる
+                if (ship.warehouses[i].itemlist[j].id == id && ship.warehouses[i].itemlist[j].num <= this.max - 1) {
+                    warehouse = ship.warehouses[i];
                     break;
                 }
             }
@@ -138,9 +241,9 @@ export class Item extends PIXI.TilingSprite {
     // 空きのある倉庫を探す
     findEmptyWarehouse(ship: Ship) {
         let warehouse: Room;
-        for (let i = 0; i < Ship.warehouses.length; i++) {
-            if (Ship.warehouses[i].itemlist.length < Ship.warehouses[i].kind) {// 倉庫があり、空きがある場合
-                warehouse = Ship.warehouses[i];
+        for (let i = 0; i < ship.warehouses.length; i++) {
+            if (ship.warehouses[i].itemlist.length < ship.warehouses[i].kind) {// 倉庫があり、空きがある場合
+                warehouse = ship.warehouses[i];
                 break;
             }
         }
@@ -174,7 +277,7 @@ export class Item extends PIXI.TilingSprite {
             }
         }
         oji.tl.clear();
-        PIXI.Loader.shared.resources.close.sound.play();
+        //PIXI.Loader.shared.resources.close.sound.play();
     }
     // アイテムの削除
     removeItem() {
@@ -193,13 +296,11 @@ export class Item extends PIXI.TilingSprite {
     //アイテムを別のアイテムに変更する
     static changeItem(item: Item, id: number) {
         item.id = id;
-        item.explanation = Item.itemInfo[id].name;
-        item.tilePosition.x = -(id % 16 * 32);
-        item.tilePosition.y = Math.floor(id / 16) * 32;
+        item.tilePosition.x = -(id * 32);
     }
     //フォーマットしたアイテムの名前を返す
     static returnItemName(id: number) {
-        let name = Item.itemInfo[id].name;
+        let name: string = Item.itemInfo[id].name;
         for (let i = name.length; i < 7; i++) {
             name += '　';
         }

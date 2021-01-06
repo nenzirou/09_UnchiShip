@@ -16,14 +16,54 @@ roomに持たせる機能
 状態変数
 位置
 */
-interface itemList {
+export interface itemList {
     id: number;
     num: number;
 }
+interface roomInfo {
+    name: string,//部屋の名前
+    need: itemList[],//必要なアイテムリスト
+    time: number,//作成にかかる時間
+    texture: string//部屋のテクスチャネーム
+}
 export type stringRoomState = 'free' | 'using' | 'gathering' | 'preparation' | 'build' | 'build_gathering' | 'build_preparation' | 'build_using';
 export abstract class Room extends PIXI.TilingSprite {
-    static roomList = { 0: '壁', 1: '通路', 2: '倉庫', 3: 'ベッド', 4: '作業場' };
-    static roomMakeList = { /*倉庫*/2: [[1, 1], [2, 1]], /*ベッド*/3: [[3, 1], [4, 3]], /*作業場*/4: [[4, 2], [5, 2]] };
+    //static roomList = { 0: '壁', 1: '通路', 2: '倉庫', 3: 'ベッド', 4: '作業場' };
+    //static roomMakeList = { /*倉庫*/2: [[1, 1], [2, 1]], /*ベッド*/3: [[3, 1], [4, 3]], /*作業場*/4: [[4, 2], [5, 2]] };
+
+    static roomInfo: roomInfo[] = [
+        {
+            name: '壁',
+            need: [],
+            time: 0,
+            texture: "room_wall"
+        }, {
+            name: '通路',
+            need: [],
+            time: 0,
+            texture: "room_aisle"
+        }, {
+            name: '倉庫',
+            need: [{ id: 1, num: 1 }],
+            time: 0,
+            texture: "room_warehouse"
+        }, {
+            name: 'ベッド',
+            need: [{ id: 1, num: 1 }],
+            time: 0,
+            texture: "room_bed"
+        }, {
+            name: '作業場',
+            need: [{ id: 1, num: 1 }],
+            time: 0,
+            texture: "room_work"
+        }, {
+            name: '壁',
+            need: [],
+            time: 0,
+            texture: ""
+        }
+    ];
     oneLayerWindow: TextWindow;//第１層ウィンドウ
     oneLayerBack: PIXI.Container;//第１層ウィンドウの戻るボタン
     oneLayerItems: Item[] = [];//第１層のアイテムアイコン
@@ -49,6 +89,7 @@ export abstract class Room extends PIXI.TilingSprite {
     ojiMax: number = 4;// おじさんを入れられる最大数
     constructor(id: number, x: number, y: number, texture: PIXI.Texture, gamescene: PIXI.Container, state: stringRoomState) {
         super(texture, 50, 50);
+        console.log(PIXI.Loader.shared.resources["room_wall"].texture);
         this.defoltTexture = texture;
         this.state = state;
         if (this.state === 'build') this.build = false;
@@ -164,13 +205,13 @@ export abstract class Room extends PIXI.TilingSprite {
     //倉庫から指定したアイテムを探し、アイテムがあればそれが格納されている倉庫を返す
     static findItemFromWarehouse(ship: Ship, id: number) {
         let tmp: number;
-        for (let i = 0; i < Ship.warehouses.length; i++) {//倉庫全部調べる
-            if (Room.judgeHavingItem(Ship.warehouses[i].itemlist, id, 1) != -1) {
+        for (let i = 0; i < ship.warehouses.length; i++) {//倉庫全部調べる
+            if (Room.judgeHavingItem(ship.warehouses[i].itemlist, id, 1) != -1) {
                 tmp = i;
                 break;
             }
         }
-        return Ship.warehouses[tmp];
+        return ship.warehouses[tmp];
     }
     //idとstateから部屋を探す
     static findRoom(ship: Ship, id: number, state: stringRoomState) {
@@ -209,23 +250,31 @@ export abstract class Room extends PIXI.TilingSprite {
     }
 
     //Itemの強化するのに必要なアイテムリストから、Roomに必要なアイテムリストに変換する
-    static listOfItemToNeedList(itemList: number[][]) {
+    static listOfItemToNeedList(itemList: itemList[]) {
         let needList: number[] = [];
         for (let i = 0; i < itemList.length; i++) {
-            for (let j = 0; j < itemList[i][1]; j++) {//必要個数分だけリストに追加する
-                needList.push(itemList[i][0]);
+            for (let j = 0; j < itemList[i].num; j++) {//必要個数分だけリストに追加する
+                needList.push(itemList[i].id);
             }
         }
         return needList;
     }
     //全倉庫にある指定したアイテムの個数を調べる
-    static countItemNum(warehouses: Room[], id: number) {
+    static countItemNum(ship: Ship, id: number, inItemCount: boolean) {
         let sum = 0;
-        for (let i = 0; i < warehouses.length; i++) {
-            for (let j = 0; j < warehouses[i].itemlist.length; j++) {
-                if (warehouses[i].itemlist[j].id == id) {
-                    sum += warehouses[i].itemlist[j].num;
+        //倉庫の中のアイテム
+        for (let i = 0; i < ship.warehouses.length; i++) {
+            for (let j = 0; j < ship.warehouses[i].itemlist.length; j++) {
+                if (ship.warehouses[i].itemlist[j].id == id) {
+                    sum += ship.warehouses[i].itemlist[j].num;
                 }
+            }
+        }
+        //船の中のアイテム
+        if (inItemCount) {
+            for (let i = 0; i < ship.items.length; i++) {
+                const item = ship.items[i];
+                if (item.id === id && item.state !== 'garbage' && item.state !== 'out') sum++;
             }
         }
         return sum;
@@ -257,11 +306,11 @@ export abstract class Room extends PIXI.TilingSprite {
             this.state = 'build_gathering';
             this.interactive = false;
             this.cnt = 0;
-            this.needItems = Room.listOfItemToNeedList(Room.roomMakeList[this.id]);//必要リストに素材を追加
+            this.needItems = Room.listOfItemToNeedList(Room.roomInfo[this.id].need);//必要リストに素材を追加
         }
         if (this.makingItem == 0 && this.needItems.length == 0 && this.state === 'build_gathering') {
             //アイテムがRoomの倉庫に揃っているかどうかを調べる
-            const needItemlist = Room.roomMakeList[this.id];//[[],[]]型がくる
+            const needItemlist: itemList[] = Room.roomInfo[this.id].need;//[[],[]]型がくる
             let judge: boolean = true;
             for (let i = 0; i < needItemlist.length; i++) {
                 if (Room.judgeHavingItem(this.itemlist, needItemlist[i][0], needItemlist[i][1]) == -1) judge = false;
@@ -296,7 +345,7 @@ export abstract class Room extends PIXI.TilingSprite {
                 this.ojiID = [];
                 this.interactive = true;
                 this.build = true;
-                ship.addChild(Button.makeSpeech(Room.roomList[this.id] + "が完成した！", 3, 400, 50, 0, 200, 1, 20, 0.8));
+                ship.addChild(Button.makeSpeech(Room.roomInfo[this.id].name + "が完成した！", 3, 400, 50, 0, 200, 1, 20, 0.8));
             }
             this.makeCnt--;
         }
@@ -311,10 +360,10 @@ export abstract class Room extends PIXI.TilingSprite {
         }
     }
     //リストにあるアイテムが全てあるかどうかを調べる
-    static jusgeFullList(needItemList: itemList[], curItemList: itemList[]) {
+    static judgeFullList(needItemList: itemList[], curItemList: itemList[]) {
         let judge: boolean = true;
         for (let i = 0; i < needItemList.length; i++) {
-            if (Room.judgeHavingItem(curItemList, needItemList[i][0], needItemList[i][1]) == -1) judge = false;
+            if (Room.judgeHavingItem(curItemList, needItemList[i].id, needItemList[i].num) == -1) judge = false;
         }
         return judge;
     }

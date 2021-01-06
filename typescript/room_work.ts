@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { Room } from "./room";
+import { itemList, Room } from "./room";
 import { Button } from "./button";
 import { Ship } from "./ship";
 import { Item } from "./item";
@@ -36,10 +36,10 @@ export class Room_work extends Room {
             let itemWindow = new TextWindow(0, 0, 1, 1, 1, 1, false);
             this.oneLayerWindow.addChild(itemWindow);
             this.twoLayerWindows.push(itemWindow);
-            let itemlist = Item.itemInfo[Room_work.makableItems[i]].need;//[[],[]]型がくる
+            const itemlist: itemList[] = Item.itemInfo[Room_work.makableItems[i]].need;//itemlist[]型がくる
             //第2層アイテムの設定
             for (let j = 0; j < itemlist.length; j++) {
-                this.twoLayerItems.push(Room.makeDisplayItem(32 + 16, (j + 2) * 32 + 16, itemlist[j][0], this.twoLayerWindows[i], true));
+                this.twoLayerItems.push(Room.makeDisplayItem(32 + 16, (j + 2) * 32 + 16, itemlist[j].id, this.twoLayerWindows[i], true));
             }
             //第1層アイテムの挙動
             this.oneLayerItems[i].on("pointerup", () => {
@@ -68,19 +68,19 @@ export class Room_work extends Room {
             //テキスト更新
             if (this.oneLayerWindow.visible) {//第1層テキスト更新
                 this.stateText.text = "" + this.state;
-                let text = '';
+                let text:string = '';
                 for (let i = 0; i < Room_work.makableItems.length; i++) {
-                    text += Item.itemInfo[Room_work.makableItems[i]].name + '(' + Room.countItemNum(Ship.warehouses, Room_work.makableItems[i]) + ')\n';
+                    text += Item.itemInfo[Room_work.makableItems[i]].name + '(' + Room.countItemNum(ship, Room_work.makableItems[i],true) + ')\n';
                 }
                 this.oneLayerWindow.setText(text);
             }
             for (let i = 0; i < this.twoLayerWindows.length; i++) {//第2層テキスト更新
                 if (this.twoLayerWindows[i].visible) {
-                    let itemlist = Item.itemInfo[Room_work.makableItems[i]].need;//[[],[]]型がくる
+                    const itemlist: itemList[] = Item.itemInfo[Room_work.makableItems[i]].need;//[[],[]]型がくる
                     //必要素材の必要数を表示するテキストを設定
                     let needItemText = "必要素材\n";
                     for (let j = 0; j < itemlist.length; j++) {
-                        needItemText += "　 " + Item.itemInfo[itemlist[j][0]].name + "×" + itemlist[j][1] + "(" + Room.countItemNum(Ship.warehouses, itemlist[j][0]) + ")\n";
+                        needItemText += "　 " + Item.itemInfo[itemlist[j].id].name + "×" + itemlist[j].num + "(" + Room.countItemNum(ship, itemlist[j].id,true) + ")\n";
                     }
                     this.twoLayerWindows[i].setText(needItemText);
                 }
@@ -89,7 +89,7 @@ export class Room_work extends Room {
             if (this.makingItem != 0) {
                 //アイテムが揃ったらアイテム作成開始
                 if (this.needItems.length == 0 && this.state === 'gathering') {
-                    if (Room.jusgeFullList(Item.itemInfo[this.makingItem].need, this.itemlist)) {//欲しいアイテムがRoomのItemListに揃っている場合
+                    if (Room.judgeFullList(Item.itemInfo[this.makingItem].need, this.itemlist)) {//欲しいアイテムがRoomのItemListに揃っている場合
                         let oji = Room.findNearFreeOji(ship, this.x, this.y);//近くのフリーおじさんを見つける
                         if (oji !== undefined) {//フリーおじさんがいた場合
                             this.state = 'preparation';

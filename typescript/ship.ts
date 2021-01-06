@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 import gsap from "gsap";
 import { Room } from "./room";
+import { itemList } from "./room";
 import { Room_wall } from "./room_wall";
 import { Room_aisle } from "./room_aisle";
 import { Room_warehouse } from "./room_warehouse";
@@ -22,7 +23,7 @@ componentsに各部屋のクラスを保存する
 
 export class Ship extends PIXI.Container {
     rooms: Room[] = new Array();//全ルームを入れる
-    static warehouses: Room[] = new Array();//倉庫を入れる
+    warehouses: Room[] = new Array();//倉庫を入れる
     ojis: Ojisan[] = new Array();//全おじさんを入れる
     freeOjis: Ojisan[] = new Array();//フリーなおじさんを入れる
     items: Item[] = new Array();//全アイテムを入れる
@@ -46,7 +47,7 @@ export class Ship extends PIXI.Container {
     makableItem: boolean = true;//アイテムを生成するかどうか決定
     enlargement: boolean = false;//拡大しているかどうか
     stop: boolean = false;//ゲームをストップするかどうか
-    money: number = 1000;//お金
+    money: number = 10000000000000;//お金
     cnt: number = 0;
     rW: number = 8;
     rH: number = 10;
@@ -164,33 +165,23 @@ export class Ship extends PIXI.Container {
         let roomNameText = new MyText(80, 70, 1, 32, 50, 0x333333);
         this.makingRoomOneLayerWindow.addChild(roomNameText);
         roomNameText.setText('倉庫\nベッド\n作業場\n倉庫\nベッド\n作業場\n倉庫\nベッド\n作業場\n倉庫\n');
-        //部屋の画像集
-        let texture = [
-            PIXI.Loader.shared.resources.room_warehouse.texture, PIXI.Loader.shared.resources.room_bed.texture, PIXI.Loader.shared.resources.room_work.texture
-            , PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture
-            , PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture
-            , PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture
-            , PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture
-            , PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture
-            , PIXI.Loader.shared.resources.room_work.texture, PIXI.Loader.shared.resources.room_work.texture
-        ];
         //作成アイテムアイコンの挙動
         for (let i = 0; i < 3; i++) {
             //第１層ウィンドウに配置するルームアイコン
-            let displayRoom = new PIXI.TilingSprite(texture[i], 50, 50);
+            const displayRoom:PIXI.TilingSprite = new PIXI.TilingSprite(PIXI.Loader.shared.resources[Room.roomInfo[i+2].texture].texture, 50, 50);
             displayRoom.position.set(20 + Math.floor(i / 10) * 180, 50 * (i % 10) + 64);
             displayRoom.interactive = true;
             displayRoom.buttonMode = true;
             this.makingRoomOneLayerWindow.addChild(displayRoom);
             this.makingRoomOneLayerItems.push(displayRoom);
             //第2層ウィンドウの設定
-            let itemWindow = new TextWindow(0, 0, 1, 1, 1, 1, false);
+            const itemWindow:TextWindow = new TextWindow(0, 0, 1, 1, 1, 1, false);
             this.makingRoomOneLayerWindow.addChild(itemWindow);
             this.makingRoomTwoLayerWindows.push(itemWindow);
-            let itemlist = Room.roomMakeList[i + 2];//[[],[]]型がくる
+            const itemlist:itemList[] = Room.roomInfo[i + 2].need;//itemList[]型がくる
             //第2層アイテムの設定
             for (let j = 0; j < itemlist.length; j++) {
-                this.makingRoomTwoLayerItems.push(Room.makeDisplayItem(32 + 16, (j + 2) * 32 + 16, itemlist[j][0], this.makingRoomTwoLayerWindows[i], true));
+                this.makingRoomTwoLayerItems.push(Room.makeDisplayItem(32 + 16, (j + 2) * 32 + 16, itemlist[j].id, this.makingRoomTwoLayerWindows[i], true));
             }
             //第1層アイテムの挙動
             this.makingRoomOneLayerItems[i].on("pointerup", () => {
@@ -201,7 +192,7 @@ export class Ship extends PIXI.Container {
             //第２層戻るボタンの設定
             this.makingRoomTwoLayerBacks.push(Room.makeBackButton(50, 0, this.makingRoomTwoLayerWindows[i]));
             //作成ボタンの挙動
-            let makingButton = new Button("作成", 100, 50, 32, 400, 2, 0x333333, 32, 1);
+            const makingButton = new Button("作成", 100, 50, 32, 400, 2, 0x333333, 32, 1);
             makingButton.on("pointerup", () => {
                 PIXI.Loader.shared.resources.open.sound.play();
                 //ウィンドウを閉じる処理
@@ -250,25 +241,27 @@ export class Ship extends PIXI.Container {
         //テキスト更新
         for (let i = 0; i < this.makingRoomTwoLayerWindows.length; i++) {//第2層テキスト更新
             if (this.makingRoomTwoLayerWindows[i].visible) {
-                let itemlist = Room.roomMakeList[i + 2];//[[],[]]型がくる
+                const itemlist: itemList[] = Room.roomInfo[i + 2].need;//itemList[]型がくる
                 //必要素材の必要数を表示するテキストを設定
                 let needItemText = "必要素材\n";
                 for (let j = 0; j < itemlist.length; j++) {
-                    needItemText += "　 " + Item.itemInfo[itemlist[j][0]].name + "×" + itemlist[j][1] + "(" + Room.countItemNum(Ship.warehouses, itemlist[j][0]) + ")\n";
+                    needItemText += "　 " + Item.itemInfo[itemlist[j].id].name + "×" + itemlist[j].num + "(" + Room.countItemNum(this, itemlist[j].id,true) + ")\n";
                 }
                 this.makingRoomTwoLayerWindows[i].setText(needItemText);
             }
         }
         //フリーなおじさんリストを作成する
+        this.freeOjis = [];
         for (let i = 0; i < this.ojis.length; i++) {
             if (this.ojis[i].state === 'free') {
                 this.freeOjis.push(this.ojis[i]);
             }
         }
         //倉庫リストを作成する
+        this.warehouses = [];
         for (let i = 0; i < this.rooms.length; i++) {
             if (this.rooms[i].id === 2) {
-                Ship.warehouses.push(this.rooms[i]);
+                this.warehouses.push(this.rooms[i]);
             }
         }
         // アイテムを生成する
@@ -314,19 +307,17 @@ export class Ship extends PIXI.Container {
         }
         //デバッグ用
         if (this.cnt % 60 == 0) {
-            let cX = app.renderer.plugins.interaction.mouse.global.x;
-            let cY = app.renderer.plugins.interaction.mouse.global.y;
-            if (cX > 0 && cY > 0) {
-                for (let i = 0; i < this.freeOjis.length; i++) {
-                    if (this.freeOjis[i].state === 'free') {
-                        this.freeOjis[i].tl.clear();
-                        this.freeOjis[i].tl.to(this.freeOjis[i], { duration: 1, x: cX, y: cY + 32 });
-                    }
-                }
-            }
+            // let cX = app.renderer.plugins.interaction.mouse.global.x;
+            // let cY = app.renderer.plugins.interaction.mouse.global.y;
+            // if (cX > 0 && cY > 0) {
+            //     for (let i = 0; i < this.freeOjis.length; i++) {
+            //         if (this.freeOjis[i].state === 'free') {
+            //             this.freeOjis[i].tl.clear();
+            //             this.freeOjis[i].tl.to(this.freeOjis[i], { duration: 1, x: cX, y: cY + 32 });
+            //         }
+            //     }
+            // }
         }
-        this.freeOjis = [];
-        Ship.warehouses = [];
         this.cnt++;
     }
     static makeItem(ship: Ship, x: number, y: number, id: number, num: number, state: stringInOut) {
