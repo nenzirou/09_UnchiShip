@@ -231,8 +231,8 @@ export abstract class Room extends PIXI.TilingSprite {
         return sum;
     }
     //戻るボタンを作成する
-    static makeBackButton(x: number, y: number, closeWindow: TextWindow) {
-        let button = new Button("戻る", 50, 30, x, y, 2, 0xcccccc, 20, 1);
+    static makeBackButton(x: number, y: number, closeWindow: PIXI.Container) {
+        const button = new Button("戻る", 50, 30, x, y, 2, 0xcccccc, 20, 1);
         button.on("pointerup", () => {
             PIXI.Loader.shared.resources.close.sound.play();
             closeWindow.visible = false;

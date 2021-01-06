@@ -13,6 +13,7 @@ import { stringRoomState } from "./room";
 import { Button } from "./button";
 import { TextWindow } from "./window";
 import { MyText } from "./myText";
+import { Shop } from "./shop";
 /*
 shipに持たせる機能
 船の全体像
@@ -27,6 +28,9 @@ export class Ship extends PIXI.Container {
     items: Item[] = new Array();//全アイテムを入れる
     rocket: PIXI.TilingSprite;//ロケット外観
     scaleButton: Button;//拡大縮小を行うボタン
+    stopButton: Button;//時間停止ボタン
+    shopButton: Button;//店ボタン
+    shop: Shop;//店
     makingRoomId: number;//作る部屋
     makingRoomButton: Button;//部屋を作るボタン
     makingRoomOneLayerWindow: TextWindow;//第1層ウィンドウ
@@ -41,6 +45,8 @@ export class Ship extends PIXI.Container {
     selected: boolean;//決定されたかどうか
     makableItem: boolean = true;//アイテムを生成するかどうか決定
     enlargement: boolean = false;//拡大しているかどうか
+    stop: boolean = false;//ゲームをストップするかどうか
+    money: number = 1000;//お金
     cnt: number = 0;
     rW: number = 8;
     rH: number = 10;
@@ -89,12 +95,13 @@ export class Ship extends PIXI.Container {
         this.rocket.interactive = true;
         this.rocket.visible = false;
         this.addChild(this.rocket);
-        this.scaleButton = new Button("拡大縮小", 100, 50, this.w - 100, this.h + 50, 0, 0x0000ff, 24, 1);//ルーム作成ボタン
-        this.scaleButton.on('click', () => {
+        //拡大縮小ボタン
+        this.scaleButton = new Button("拡大縮小", 100, 50, this.w - 100, this.h + 50, 0, 0x0000ff, 24, 1);
+        this.scaleButton.on('pointertap', () => {
             if (this.enlargement) {
                 tl.to(this.scale, { duration: 0.2, x: 1, y: 1 })
                     .to(this.rocket, { duration: 0.2, alpha: 0 })
-                    .call(() => { this.rocket.visible = false; this.rocket.alpha = 1;});
+                    .call(() => { this.rocket.visible = false; this.rocket.alpha = 1; });
             } else {
                 tl.call(() => { this.rocket.visible = true; })
                     .to(this.scale, { duration: 0.2, x: 0.5, y: 0.5 })
@@ -103,8 +110,24 @@ export class Ship extends PIXI.Container {
             this.enlargement = !this.enlargement;
         });
         gamescene.addChild(this.scaleButton);
+        //時間停止ボタン
+        this.stopButton = new Button("一時停止", 100, 50, this.w - 200, this.h, 0, 0x333333, 24, 1);
+        this.stopButton.on('pointertap', () => {
+            this.stop = !this.stop;
+        });
+        gamescene.addChild(this.stopButton);
+        //店作成
+        this.shop = new Shop(this);
+        this.shop.visible = false;
+        gamescene.addChild(this.shop);
+        //店ボタン
+        this.shopButton = new Button("お店", 100, 50, this.w - 200, this.h + 50, 0, 0x00ff00, 24, 1);
+        this.shopButton.on('pointertap', () => {
+            this.shop.visible = true;
+        });
+        gamescene.addChild(this.shopButton);
         //クリックされたときの処理
-        this.on('click', (e: PIXI.InteractionEvent) => {
+        this.on('pointertap', (e: PIXI.InteractionEvent) => {
             let position = e.data.getLocalPosition(this);
             position.set(Math.floor(position.x / 50) * 50, Math.floor(position.y / 50) * 50);
             if (this.clickPosition.x == position.x && this.clickPosition.y == position.y) {
@@ -261,28 +284,32 @@ export class Ship extends PIXI.Container {
             // this.makeItem(this, this.w, -100, 5, 6, 'out');
         }
         //this.scale.set(0.5 + this.cnt % 500 / 1000, 0.5 + this.cnt % 500 / 1000);
-        this.x = Math.sin(this.cnt / 300) * 20 + 20;
-        this.y = Math.cos(this.cnt / 300) * 20 + 20;
-        // アイテムの動作を行う
-        for (let i = 0; i < this.items.length; i++) {
-            this.items[i].move(this);
-            if (this.items[i].state === 'garbage') {
-                this.items[i].parent.removeChild(this.items[i]);
-                this.items.splice(i, 1);
-                i--;
+        // this.x = Math.sin(this.cnt / 300) * 20 + 20;
+        // this.y = Math.cos(this.cnt / 300) * 20 + 20;
+        if (!this.stop) {
+            //お店の動作を行う
+            this.shop.display(this);
+            // アイテムの動作を行う
+            for (let i = 0; i < this.items.length; i++) {
+                this.items[i].move(this);
+                if (this.items[i].state === 'garbage') {
+                    this.items[i].parent.removeChild(this.items[i]);
+                    this.items.splice(i, 1);
+                    i--;
+                }
             }
-        }
-        // ステージの動作を行う
-        for (let i = 0; i < this.rooms.length; i++) {
-            this.rooms[i].move(this);
-        }
-        // おじさんの動作を行う
-        for (let i = 0; i < this.ojis.length; i++) {
-            this.ojis[i].move(this);
-            if (this.ojis[i].hp <= 0) {
-                this.ojis[i].parent.removeChild(this.ojis[i]);
-                this.ojis.splice(i, 1);
-                i--;
+            // ステージの動作を行う
+            for (let i = 0; i < this.rooms.length; i++) {
+                this.rooms[i].move(this);
+            }
+            // おじさんの動作を行う
+            for (let i = 0; i < this.ojis.length; i++) {
+                this.ojis[i].move(this);
+                if (this.ojis[i].hp <= 0) {
+                    this.ojis[i].parent.removeChild(this.ojis[i]);
+                    this.ojis.splice(i, 1);
+                    i--;
+                }
             }
         }
         //デバッグ用
