@@ -27,7 +27,7 @@ export class Ojisan extends PIXI.TilingSprite {
     tl: TimelineMax;
     childs: PIXI.TilingSprite[] = [];
     room: Room;
-    speed: number = 50;
+    speed: number = 200;
     constructor(x: number, y: number) {
         super(PIXI.Loader.shared.resources.oji.texture, 20, 32);
         this.anchor.set(0.5);

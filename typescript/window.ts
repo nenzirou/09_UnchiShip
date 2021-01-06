@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { MyText } from "./text";
+import { MyText } from "./myText";
 /*
 ウィンドウ
 */

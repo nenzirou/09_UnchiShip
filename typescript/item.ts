@@ -8,10 +8,35 @@ import gsap from "gsap";
 itemに持たせる機能
 id
 */
+interface itemInfo {
+    name: number;//アイテムの名前
+    need: number[][];//アイテムを作るのに必要なアイテム
+    num: number;//アイテムを作るとき何個できるか
+}
 export type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage' | 'display' | 'made';
 export class Item extends PIXI.TilingSprite {
-    static itemList = { 0: '無', 1: 'うんち', 2: '粘土', 3: '土器', 4: 'レンガ', 5: '水', 6: 'a' };
-    static itemMakeList = { /*うんち*/1: [[1, 1], [2, 1]], /*粘土*/2: [[1, 1], [2, 3]], /*土器*/3: [[1, 1], [2, 1], [4, 1], [5, 1]], /*レンガ*/4: [[1, 1], [2, 3]], /*水*/5: [[1, 4]] };
+    static itemInfo = {
+        0: { name: '無', need: [], num: 1 },
+        1: { name: 'うんち', need: [], num: 1 },
+        2: { name: '粘土', need: [], num: 1 },
+        3: { name: '土器', need: [[2, 1], [5, 1]], num: 1 },
+        4: { name: 'レンガ', need: [[2, 2]], num: 1 },
+        5: { name: '水', need: [], num: 1 },
+        6: { name: 'スクラップ', need: [], num: 1 },
+        7: { name: '鉄板', need: [[6, 1]], num: 1 },
+        8: { name: 'ネジ', need: [[6, 1]], num: 1 },
+        9: { name: 'ドライバー', need: [[6, 1]], num: 1 },
+        10: { name: '砂', need: [[11, 1]], num: 1 },
+        11: { name: '岩', need: [], num: 1 },
+        12: { name: '枯れ枝', need: [], num: 1 },
+        13: { name: '木材', need: [[12, 2]], num: 1 },
+        14: { name: 'イス', need: [[13, 1]], num: 1 },
+        15: { name: '布切れ', need: [], num: 1 },
+        16: { name: '枕', need: [[15, 1]], num: 1 },
+        17: { name: 'ベッド', need: [[15, 1, 13, 4]], num: 1 },
+        18: { name: 'ドラム缶', need: [], num: 1 },
+        19: { name: '', need: [], num: 1 },
+    };
     num: number;
     cnt: number = 0;
     id: number = 0;
@@ -168,13 +193,13 @@ export class Item extends PIXI.TilingSprite {
     //アイテムを別のアイテムに変更する
     static changeItem(item: Item, id: number) {
         item.id = id;
-        item.explanation = Item.itemList[id];
+        item.explanation = Item.itemInfo[id].name;
         item.tilePosition.x = -(id % 16 * 32);
         item.tilePosition.y = Math.floor(id / 16) * 32;
     }
     //フォーマットしたアイテムの名前を返す
     static returnItemName(id: number) {
-        let name = Item.itemList[id];
+        let name = Item.itemInfo[id].name;
         for (let i = name.length; i < 7; i++) {
             name += '　';
         }

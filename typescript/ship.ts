@@ -12,7 +12,7 @@ import { stringInOut } from "./item";
 import { stringRoomState } from "./room";
 import { Button } from "./button";
 import { TextWindow } from "./window";
-import { MyText } from "./text";
+import { MyText } from "./myText";
 /*
 shipに持たせる機能
 船の全体像
@@ -231,7 +231,7 @@ export class Ship extends PIXI.Container {
                 //必要素材の必要数を表示するテキストを設定
                 let needItemText = "必要素材\n";
                 for (let j = 0; j < itemlist.length; j++) {
-                    needItemText += "　 " + Item.itemList[itemlist[j][0]] + "×" + itemlist[j][1] + "(" + Room.countItemNum(Ship.warehouses, itemlist[j][0]) + ")\n";
+                    needItemText += "　 " + Item.itemInfo[itemlist[j][0]].name + "×" + itemlist[j][1] + "(" + Room.countItemNum(Ship.warehouses, itemlist[j][0]) + ")\n";
                 }
                 this.makingRoomTwoLayerWindows[i].setText(needItemText);
             }

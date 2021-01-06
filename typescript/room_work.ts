@@ -4,14 +4,14 @@ import { Button } from "./button";
 import { Ship } from "./ship";
 import { Item } from "./item";
 import { TextWindow } from "./window";
-import { MyText } from "./text";
+import { MyText } from "./myText";
 /*
 働く場所
 */
 export class Room_work extends Room {
-    static makableItems: number[] = [1, 2, 3, 4, 5];
-    constructor(x: number, y: number, gamescene: PIXI.Container,state) {
-        super(4, x, y, PIXI.Loader.shared.resources.room_work.texture, gamescene,state);
+    static makableItems: number[] = [7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3];
+    constructor(x: number, y: number, gamescene: PIXI.Container, state) {
+        super(4, x, y, PIXI.Loader.shared.resources.room_work.texture, gamescene, state);
         //状態表示テキストの設定 デバッグ用
         this.stateText = new MyText(100, 0, 1, 32, 32, 0x333333);
         this.oneLayerWindow.addChild(this.stateText);
@@ -36,7 +36,7 @@ export class Room_work extends Room {
             let itemWindow = new TextWindow(0, 0, 1, 1, 1, 1, false);
             this.oneLayerWindow.addChild(itemWindow);
             this.twoLayerWindows.push(itemWindow);
-            let itemlist = Item.itemMakeList[Room_work.makableItems[i]];//[[],[]]型がくる
+            let itemlist = Item.itemInfo[Room_work.makableItems[i]].need;//[[],[]]型がくる
             //第2層アイテムの設定
             for (let j = 0; j < itemlist.length; j++) {
                 this.twoLayerItems.push(Room.makeDisplayItem(32 + 16, (j + 2) * 32 + 16, itemlist[j][0], this.twoLayerWindows[i], true));
@@ -70,17 +70,17 @@ export class Room_work extends Room {
                 this.stateText.text = "" + this.state;
                 let text = '';
                 for (let i = 0; i < Room_work.makableItems.length; i++) {
-                    text += Item.itemList[Room_work.makableItems[i]] + '(' + Room.countItemNum(Ship.warehouses, Room_work.makableItems[i]) + ')を作成\n';
+                    text += Item.itemInfo[Room_work.makableItems[i]].name + '(' + Room.countItemNum(Ship.warehouses, Room_work.makableItems[i]) + ')\n';
                 }
                 this.oneLayerWindow.setText(text);
             }
             for (let i = 0; i < this.twoLayerWindows.length; i++) {//第2層テキスト更新
                 if (this.twoLayerWindows[i].visible) {
-                    let itemlist = Item.itemMakeList[Room_work.makableItems[i]];//[[],[]]型がくる
+                    let itemlist = Item.itemInfo[Room_work.makableItems[i]].need;//[[],[]]型がくる
                     //必要素材の必要数を表示するテキストを設定
                     let needItemText = "必要素材\n";
                     for (let j = 0; j < itemlist.length; j++) {
-                        needItemText += "　 " + Item.itemList[itemlist[j][0]] + "×" + itemlist[j][1] + "(" + Room.countItemNum(Ship.warehouses, itemlist[j][0]) + ")\n";
+                        needItemText += "　 " + Item.itemInfo[itemlist[j][0]].name + "×" + itemlist[j][1] + "(" + Room.countItemNum(Ship.warehouses, itemlist[j][0]) + ")\n";
                     }
                     this.twoLayerWindows[i].setText(needItemText);
                 }
@@ -89,7 +89,7 @@ export class Room_work extends Room {
             if (this.makingItem != 0) {
                 //アイテムが揃ったらアイテム作成開始
                 if (this.needItems.length == 0 && this.state === 'gathering') {
-                    if (Room.jusgeFullList(Item.itemMakeList[this.makingItem], this.itemlist)) {//欲しいアイテムがRoomのItemListに揃っている場合
+                    if (Room.jusgeFullList(Item.itemInfo[this.makingItem].need, this.itemlist)) {//欲しいアイテムがRoomのItemListに揃っている場合
                         let oji = Room.findNearFreeOji(ship, this.x, this.y);//近くのフリーおじさんを見つける
                         if (oji !== undefined) {//フリーおじさんがいた場合
                             this.state = 'preparation';
@@ -116,7 +116,7 @@ export class Room_work extends Room {
                         this.state = 'free';
                         Room.allFreeOji(ship.ojis, this.ojiID);
                         this.ojiID = [];
-                        Ship.makeItem(ship, this.x, this.y, this.makingItem, 1, 'made');
+                        Ship.makeItem(ship, this.x, this.y, this.makingItem, Item.itemInfo[this.makingItem].num, 'made');
                         if (this.loop) {
                             this.startMakeItem(this.makingItem);
                         } else {
@@ -133,7 +133,7 @@ export class Room_work extends Room {
         if (this.state === 'free') {
             this.state = 'gathering';//アイテム収集開始
             this.makingItem = id;
-            this.needItems = Room.listOfItemToNeedList(Item.itemMakeList[this.makingItem]);//必要リストに素材を追加
+            this.needItems = Room.listOfItemToNeedList(Item.itemInfo[this.makingItem].need);//必要リストに素材を追加
             this.cnt = 0;
         }
     }

@@ -3,7 +3,7 @@ import { TextWindow } from "./window";
 import { Ship } from "./ship";
 import { Ojisan } from "./ojisan";
 import { Item } from "./item";
-import { MyText } from "./text";
+import { MyText } from "./myText";
 import { Button } from "./button";
 
 /*
