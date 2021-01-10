@@ -33,22 +33,23 @@ export class Shop extends PIXI.Sprite {
     sellingProductFirstId: number;//売る商品リストの最初のID
     constructor(ship: Ship) {
         super(PIXI.Loader.shared.resources.window.texture);
+        this.interactive = true;
         this.zIndex = 100;//最前面表示
         this.alpha = 0.8;
         //戻るボタン作成
         this.backButton = Room.makeBackButton(0, 0, this);
         //所持金表示テキスト作成
-        this.moneyText = new MyText(100, 5, 0, 20, 32, 0xdddd33);
+        this.moneyText = new MyText("", 100, 5, 0, 20, 32, 0xdddd33);
         this.addChild(this.moneyText);
         //                                      購入部品設定                                        //
         this.buyingWindow = new simpleWindow(360, 500, 20, 32, 0, 0xdd9999, 0.6, true);//購入ウィンドウ
         this.addChild(this.buyingWindow);
         //商品の名前と所持数を表示するテキスト
-        const buyingProductText = new MyText(32, 5, 0, 20, 35, 0x333333);
+        const buyingProductText = new MyText("", 32, 5, 0, 20, 35, 0x333333);
         this.buyingWindow.addChild(buyingProductText);
         this.buyingProductText = buyingProductText;
         //商品の値段を表示するテキスト
-        const buyingProductMoneyText = new MyText(200, 5, 0, 20, 35, 0xdddd33);
+        const buyingProductMoneyText = new MyText("", 200, 5, 0, 20, 35, 0xdddd33);
         buyingProductMoneyText.style.align = 'right';
         this.buyingWindow.addChild(buyingProductMoneyText);
         this.buyingProductMoneyText = buyingProductMoneyText;
@@ -58,7 +59,7 @@ export class Shop extends PIXI.Sprite {
             this.buyingWindow.addChild(item);
             this.buyingProductIcons.push(item);
             //商品を購入するボタン
-            const buyingButton = new Button("購入", 55, 32, 300, 35 * i, 0, 0x993333, 24, 1);
+            const buyingButton = new Button("購入", 55, 32, 300, 35 * i, 0, 0x993333, 24, 1, true);
             buyingButton.on('pointertap', () => {
                 if (ship.money >= this.buyingList[i][1]) {
                     PIXI.Loader.shared.resources.shop.sound.play();
@@ -77,19 +78,19 @@ export class Shop extends PIXI.Sprite {
         this.sellingWindow.visible = false;
         this.addChild(this.sellingWindow);
         //商品の名前と所持数を表示するテキスト
-        const sellingProductText = new MyText(32, 5, 0, 20, 35, 0x333333);
+        const sellingProductText = new MyText("", 32, 5, 0, 20, 35, 0x333333);
         this.sellingWindow.addChild(sellingProductText);
         this.sellingProductText = sellingProductText;
         //商品の値段を表示するテキスト
-        const sellingProductMoneyText = new MyText(200, 5, 0, 20, 35, 0xdddd33);
+        const sellingProductMoneyText = new MyText("", 200, 5, 0, 20, 35, 0xdddd33);
         sellingProductMoneyText.style.align = 'right';
         this.sellingWindow.addChild(sellingProductMoneyText);
         this.sellingProductMoneyText = sellingProductMoneyText;
         //商品リストを上下させるボタン
-        const upButton = new Button("↑", 175, 32, 0, 455, 0, 0x333333, 24, 1);
+        const upButton = new Button("↑", 175, 32, 0, 455, 0, 0x333333, 24, 1, true);
         upButton.on("pointertap", () => { this.sellingProductFirstId--; if (this.sellingProductFirstId <= 0) this.sellingProductFirstId = 1; this.setSellingProduct(this.sellingProductFirstId); });
         this.sellingWindow.addChild(upButton);
-        const downButton = new Button("↓", 175, 32, 185, 455, 0, 0x333333, 24, 1);
+        const downButton = new Button("↓", 175, 32, 185, 455, 0, 0x333333, 24, 1, true);
         downButton.on("pointertap", () => { this.sellingProductFirstId++; if (this.sellingProductFirstId >= 5) this.sellingProductFirstId = 5; this.setSellingProduct(this.sellingProductFirstId); });
         this.sellingWindow.addChild(downButton);
         for (let i = 0; i < this.sellingMax; i++) {
@@ -98,7 +99,7 @@ export class Shop extends PIXI.Sprite {
             this.sellingWindow.addChild(item);
             this.sellingProductIcons.push(item);
             //商品を購入するボタン
-            const sellingButton = new Button("売却", 55, 32, 300, 35 * i, 0, 0x333399, 24, 1);
+            const sellingButton = new Button("売却", 55, 32, 300, 35 * i, 0, 0x333399, 24, 1, true);
             sellingButton.on('pointertap', () => {
                 if (this.sellingProductSum[i] > 0) {
                     PIXI.Loader.shared.resources.shop.sound.play();
@@ -121,10 +122,10 @@ export class Shop extends PIXI.Sprite {
         this.sellingProductFirstId = 1;
         this.setSellingProduct(1);
         //購入、売却切替ボタン
-        this.buyingButton = new Button("購入", 180, 50, 20, 520, 0, 0xdd3333, 24, 1);
+        this.buyingButton = new Button("購入", 180, 50, 20, 520, 0, 0xdd3333, 24, 1, true);
         this.buyingButton.on("pointertap", () => { this.buyingWindow.visible = true; this.sellingWindow.visible = false; });
         this.addChild(this.buyingButton);
-        this.sellingButton = new Button("売却", 180, 50, 200, 520, 0, 0x3333dd, 24, 1);
+        this.sellingButton = new Button("売却", 180, 50, 200, 520, 0, 0x3333dd, 24, 1, true);
         this.sellingButton.on("pointertap", () => { this.buyingWindow.visible = false; this.sellingWindow.visible = true; });
         this.addChild(this.sellingButton);
     }

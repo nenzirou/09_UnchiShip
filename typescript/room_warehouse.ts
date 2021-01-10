@@ -52,5 +52,10 @@ export class Room_warehouse extends Room {
                 this.oneLayerWindow.setText(text);
             }
         }
+        for (let i = 0; i < this.itemlist.length; i++) {
+            if (this.itemlist[i].num <= 0) {
+                this.itemlist.splice(i, 1);
+            }
+        }
     }
 }

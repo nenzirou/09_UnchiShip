@@ -274,14 +274,14 @@ export abstract class Room extends PIXI.TilingSprite {
         if (inItemCount) {
             for (let i = 0; i < ship.items.length; i++) {
                 const item = ship.items[i];
-                if (item.id === id && item.state !== 'garbage' && item.state !== 'out') sum++;
+                if (item.id === id && item.state !== 'garbage' && item.state !== 'out') sum += item.num;
             }
         }
         return sum;
     }
     //戻るボタンを作成する
     static makeBackButton(x: number, y: number, closeWindow: PIXI.Container) {
-        const button = new Button("戻る", 50, 30, x, y, 2, 0xcccccc, 20, 1);
+        const button = new Button("戻る", 50, 30, x, y, 2, 0x555555, 20, 1,true);
         button.on("pointerup", () => {
             PIXI.Loader.shared.resources.close.sound.play();
             closeWindow.visible = false;
@@ -345,7 +345,7 @@ export abstract class Room extends PIXI.TilingSprite {
                 this.ojiID = [];
                 this.interactive = true;
                 this.build = true;
-                ship.addChild(Button.makeSpeech(Room.roomInfo[this.id].name + "が完成した！", 3, 400, 50, 0, 200, 1, 20, 0.8));
+                ship.addChild(Button.makeSpeech(Room.roomInfo[this.id].name + "が完成した！",0xdd3333, 3, 400, 50, 0, 200, 1, 20, 0.8));
             }
             this.makeCnt--;
         }

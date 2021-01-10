@@ -13,7 +13,7 @@ export class Room_work extends Room {
     constructor(x: number, y: number, gamescene: PIXI.Container, state) {
         super(4, x, y, PIXI.Loader.shared.resources.room_work.texture, gamescene, state);
         //状態表示テキストの設定 デバッグ用
-        this.stateText = new MyText(100, 0, 1, 32, 32, 0x333333);
+        this.stateText = new MyText("",100, 0, 1, 32, 32, 0x333333);
         this.oneLayerWindow.addChild(this.stateText);
         this.stateText.text = this.state;
         //部屋がクリックされたときの処理
@@ -50,7 +50,7 @@ export class Room_work extends Room {
             //第２層戻るボタンの設定
             this.twoLayerBacks.push(Room.makeBackButton(50, 0, this.twoLayerWindows[i]));
             //作成ボタンの挙動
-            let makingButton = new Button("作成", 100, 50, 32, 400, 2, 0x333333, 26, 1);
+            let makingButton = new Button("作成", 100, 50, 32, 400, 2, 0x333333, 26, 1,true);
             makingButton.on("pointerup", () => {
                 if (this.state === 'free') {
                     PIXI.Loader.shared.resources.close.sound.play();

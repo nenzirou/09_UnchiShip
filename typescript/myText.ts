@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js";
 export class MyText extends PIXI.Text {
-    constructor(x: number, y: number, z: number, fontSize: number, height: number, fill: number) {
-        super("");
+    constructor(text: string, x: number, y: number, z: number, fontSize: number, height: number, fill: number) {
+        super(text);
         // テキストに関するパラメータを定義する(ここで定義した意外にもたくさんパラメータがある)
         const textStyle = new PIXI.TextStyle({
             fontFamily: "Arial", // フォント

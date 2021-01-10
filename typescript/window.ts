@@ -14,7 +14,7 @@ export class TextWindow extends PIXI.TilingSprite {
         this.alpha = alpha;//ウィンドウの透明度
         this.sortableChildren = true;//子のｚ座標を考慮する
         this.visible = visible;//表示設定
-        this.text = new MyText(25, 30, 0, 32, 32, 0x333333);//ウィンドウ内のテキスト
+        this.text = new MyText("",25, 30, 0, 32, 32, 0x333333);//ウィンドウ内のテキスト
         this.text.position.set(25, 30);//ウィンドウ内のテキストの位置
         this.addChild(this.text);//ウィンドウテキストをウィンドウに登録
         this.interactive = true;//ウィンドウに隠れた物のタッチを無効にするために設定

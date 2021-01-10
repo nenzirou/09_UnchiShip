@@ -8,15 +8,15 @@ import gsap from "gsap";
  */
 export class Button extends PIXI.Container {
     buttonText: PIXI.Text;
-    constructor(text: string, width: number, height: number, x: number, y: number, z: number, color: number, fontSize: number, alpha: number) {
+    constructor(text: string, width: number, height: number, x: number, y: number, z: number, color: number, fontSize: number, alpha: number, touch: boolean) {
         super();
         // ボタン作成
         const backColor = new PIXI.Graphics(); // グラフィックオブジェクト（背景に半透明な四角を配置するために使用）
         backColor.beginFill(color, alpha); // 色、透明度を指定して描画開始
         backColor.drawRect(0, 0, width, height); // 位置(0,0)を左上にして、width,heghtの四角形を描画
         backColor.endFill(); // 描画完了
-        backColor.interactive = true; // クリック可能にする
-        backColor.buttonMode = true;//クリック可能なマウスカーソルにする
+        backColor.interactive = touch; // クリック可能にする
+        backColor.buttonMode = touch;//クリック可能なマウスカーソルにする
         this.addChild(backColor); // 背景をボタンコンテナに追加
 
         // テキストに関するパラメータを定義する(ここで定義した意外にもたくさんパラメータがある)
@@ -39,7 +39,7 @@ export class Button extends PIXI.Container {
 
     }
     static makeTouchSpeech(text: string, width: number, height: number, x: number, y: number, z: number, fontSize: number, alpha: number, parent) {
-        let speech = new Button(text, width, height, x, y, z, 0x333333, fontSize, alpha);
+        let speech = new Button(text, width, height, x, y, z, 0x333333, fontSize, alpha,false);
         const tl = gsap.timeline();//タイムライン初期化
         tl
             .from(speech.scale, { duration: 0.1, x: 0.1, y: 0.1 })
@@ -51,9 +51,10 @@ export class Button extends PIXI.Container {
         parent.interactive = false;
         parent.addChild(speech);
     }
-    static makeSpeech(text: string, duration: number, width: number, height: number, x: number, y: number, z: number, fontSize: number, alpha: number) {
-        let speech = new Button(text, width, height, x, y, z, 0x333333, fontSize, alpha);
+    static makeSpeech(text: string, color: number, duration: number, width: number, height: number, x: number, y: number, z: number, fontSize: number, alpha: number) {
+        const speech = new Button(text, width, height, x, y, z, color, fontSize, alpha,false);
         speech.interactive = false;
+        speech.buttonMode = false;
         const tl = gsap.timeline();//タイムライン初期化
         tl
             .from(speech.scale, { duration: 0.1, x: 0.1, y: 0.1 })

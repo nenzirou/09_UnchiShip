@@ -15,6 +15,7 @@ import { Button } from "./button";
 import { TextWindow } from "./window";
 import { MyText } from "./myText";
 import { Shop } from "./shop";
+import { Quest } from "./quest";
 /*
 shipに持たせる機能
 船の全体像
@@ -28,10 +29,13 @@ export class Ship extends PIXI.Container {
     freeOjis: Ojisan[] = new Array();//フリーなおじさんを入れる
     items: Item[] = new Array();//全アイテムを入れる
     rocket: PIXI.TilingSprite;//ロケット外観
-    scaleButton: Button;//拡大縮小を行うボタン
+    scaleUpButton: Button;//拡大を行うボタン
+    scaleDownButton: Button;//縮小を行うボタン
     stopButton: Button;//時間停止ボタン
     shopButton: Button;//店ボタン
     shop: Shop;//店
+    questButton: Button;//クエストボタン
+    quest: Quest;//クエスト一覧
     makingRoomId: number;//作る部屋
     makingRoomButton: Button;//部屋を作るボタン
     makingRoomOneLayerWindow: TextWindow;//第1層ウィンドウ
@@ -97,8 +101,9 @@ export class Ship extends PIXI.Container {
         this.rocket.visible = false;
         this.addChild(this.rocket);
         //拡大縮小ボタン
-        this.scaleButton = new Button("拡大縮小", 100, 50, this.w - 100, this.h + 50, 0, 0x0000ff, 24, 1);
-        this.scaleButton.on('pointertap', () => {
+        this.scaleUpButton = new Button("拡大", 50, 50, this.w - 100, this.h + 50, 0, 0x0000ff, 24, 1,true);
+        this.scaleDownButton = new Button("縮小", 50, 50, this.w - 50, this.h + 50, 0, 0x0000ff, 24, 1,true);
+        this.scaleUpButton.on('pointertap', () => {
             if (this.enlargement) {
                 tl.to(this.scale, { duration: 0.2, x: 1, y: 1 })
                     .to(this.rocket, { duration: 0.2, alpha: 0 })
@@ -110,9 +115,10 @@ export class Ship extends PIXI.Container {
             }
             this.enlargement = !this.enlargement;
         });
-        gamescene.addChild(this.scaleButton);
+        gamescene.addChild(this.scaleUpButton);
+        gamescene.addChild(this.scaleDownButton);
         //時間停止ボタン
-        this.stopButton = new Button("一時停止", 100, 50, this.w - 200, this.h, 0, 0x333333, 24, 1);
+        this.stopButton = new Button("一時停止", 100, 50, this.w - 200, this.h, 0, 0x333333, 24, 1,true);
         this.stopButton.on('pointertap', () => {
             this.stop = !this.stop;
         });
@@ -122,11 +128,21 @@ export class Ship extends PIXI.Container {
         this.shop.visible = false;
         gamescene.addChild(this.shop);
         //店ボタン
-        this.shopButton = new Button("お店", 100, 50, this.w - 200, this.h + 50, 0, 0x00ff00, 24, 1);
+        this.shopButton = new Button("お店", 100, 50, this.w - 200, this.h + 50, 0, 0x00ff00, 24, 1,true);
         this.shopButton.on('pointertap', () => {
             this.shop.visible = true;
         });
         gamescene.addChild(this.shopButton);
+        //クエスト一覧生成
+        this.quest = new Quest(this);
+        this.quest.visible = false;
+        gamescene.addChild(this.quest);
+        //クエストボタン
+        this.questButton = new Button("クエスト", 100, 50, this.w - 300, this.h + 50, 0, 0xff00ff, 24, 1,true);
+        this.questButton.on('pointertap', () => {
+            this.quest.visible = true;
+        });
+        gamescene.addChild(this.questButton);
         //クリックされたときの処理
         this.on('pointertap', (e: PIXI.InteractionEvent) => {
             let position = e.data.getLocalPosition(this);
@@ -147,7 +163,7 @@ export class Ship extends PIXI.Container {
         this.clickCursor.visible = false;
         this.addChild(this.clickCursor);
         //部屋を作るUI　第1層
-        this.makingRoomButton = new Button("部屋作成", 100, 50, this.w - 100, this.h, 0, 0x000000, 24, 1);//ルーム作成ボタン
+        this.makingRoomButton = new Button("部屋作成", 100, 50, this.w - 100, this.h, 0, 0x000000, 24, 1,true);//ルーム作成ボタン
         this.makingRoomOneLayerWindow = new TextWindow(0, 0, 1, 1, 1, 0.8, false);//ルーム作成第１ウィンドウ
         this.makingRoomOneLayerBack = Room.makeBackButton(0, 0, this.makingRoomOneLayerWindow);//第1層戻るボタン作成
         this.makingRoomOneLayerBack.on('click', () => {//第1層戻るボタンの処理
@@ -160,25 +176,24 @@ export class Ship extends PIXI.Container {
         });
         gamescene.addChild(this.makingRoomButton);//ルーム作成ボタンを登録
         //第1層ウィンドウ内のテキスト設定
-        let text = '作成する部屋を選択';
-        this.makingRoomOneLayerWindow.setText(text);
-        let roomNameText = new MyText(80, 70, 1, 32, 50, 0x333333);
+        this.makingRoomOneLayerWindow.setText('作成する部屋を選択');
+        let roomNameText = new MyText("", 80, 70, 1, 32, 50, 0x333333);
         this.makingRoomOneLayerWindow.addChild(roomNameText);
         roomNameText.setText('倉庫\nベッド\n作業場\n倉庫\nベッド\n作業場\n倉庫\nベッド\n作業場\n倉庫\n');
         //作成アイテムアイコンの挙動
         for (let i = 0; i < 3; i++) {
             //第１層ウィンドウに配置するルームアイコン
-            const displayRoom:PIXI.TilingSprite = new PIXI.TilingSprite(PIXI.Loader.shared.resources[Room.roomInfo[i+2].texture].texture, 50, 50);
+            const displayRoom: PIXI.TilingSprite = new PIXI.TilingSprite(PIXI.Loader.shared.resources[Room.roomInfo[i + 2].texture].texture, 50, 50);
             displayRoom.position.set(20 + Math.floor(i / 10) * 180, 50 * (i % 10) + 64);
             displayRoom.interactive = true;
             displayRoom.buttonMode = true;
             this.makingRoomOneLayerWindow.addChild(displayRoom);
             this.makingRoomOneLayerItems.push(displayRoom);
             //第2層ウィンドウの設定
-            const itemWindow:TextWindow = new TextWindow(0, 0, 1, 1, 1, 1, false);
+            const itemWindow: TextWindow = new TextWindow(0, 0, 1, 1, 1, 1, false);
             this.makingRoomOneLayerWindow.addChild(itemWindow);
             this.makingRoomTwoLayerWindows.push(itemWindow);
-            const itemlist:itemList[] = Room.roomInfo[i + 2].need;//itemList[]型がくる
+            const itemlist: itemList[] = Room.roomInfo[i + 2].need;//itemList[]型がくる
             //第2層アイテムの設定
             for (let j = 0; j < itemlist.length; j++) {
                 this.makingRoomTwoLayerItems.push(Room.makeDisplayItem(32 + 16, (j + 2) * 32 + 16, itemlist[j].id, this.makingRoomTwoLayerWindows[i], true));
@@ -192,13 +207,13 @@ export class Ship extends PIXI.Container {
             //第２層戻るボタンの設定
             this.makingRoomTwoLayerBacks.push(Room.makeBackButton(50, 0, this.makingRoomTwoLayerWindows[i]));
             //作成ボタンの挙動
-            const makingButton = new Button("作成", 100, 50, 32, 400, 2, 0x333333, 32, 1);
+            const makingButton = new Button("作成", 100, 50, 32, 400, 2, 0x333333, 32, 1,true);
             makingButton.on("pointerup", () => {
                 PIXI.Loader.shared.resources.open.sound.play();
                 //ウィンドウを閉じる処理
                 this.makingRoomOneLayerWindow.visible = false;
                 Room.changeVisual(this.makingRoomTwoLayerWindows, false);
-                gamescene.addChild(Button.makeSpeech("部屋を立てる場所を選んでください。", 5, 400, 32, 0, 200, 1, 22, 0.8));
+                gamescene.addChild(Button.makeSpeech("部屋を立てる場所を選んでください。", 0x333333, 5, 400, 32, 0, 200, 1, 22, 0.8));
                 //選ぶ処理
                 for (let j = 0; j < this.rooms.length; j++) {//全ての部屋をタッチできなくする
                     this.rooms[j].interactive = false;
@@ -245,7 +260,7 @@ export class Ship extends PIXI.Container {
                 //必要素材の必要数を表示するテキストを設定
                 let needItemText = "必要素材\n";
                 for (let j = 0; j < itemlist.length; j++) {
-                    needItemText += "　 " + Item.itemInfo[itemlist[j].id].name + "×" + itemlist[j].num + "(" + Room.countItemNum(this, itemlist[j].id,true) + ")\n";
+                    needItemText += "　 " + Item.itemInfo[itemlist[j].id].name + "×" + itemlist[j].num + "(" + Room.countItemNum(this, itemlist[j].id, true) + ")\n";
                 }
                 this.makingRoomTwoLayerWindows[i].setText(needItemText);
             }
@@ -282,6 +297,8 @@ export class Ship extends PIXI.Container {
         if (!this.stop) {
             //お店の動作を行う
             this.shop.display(this);
+            //クエストの動作を行う
+            this.quest.display(this);
             // アイテムの動作を行う
             for (let i = 0; i < this.items.length; i++) {
                 this.items[i].move(this);
@@ -307,16 +324,16 @@ export class Ship extends PIXI.Container {
         }
         //デバッグ用
         if (this.cnt % 60 == 0) {
-            // let cX = app.renderer.plugins.interaction.mouse.global.x;
-            // let cY = app.renderer.plugins.interaction.mouse.global.y;
-            // if (cX > 0 && cY > 0) {
-            //     for (let i = 0; i < this.freeOjis.length; i++) {
-            //         if (this.freeOjis[i].state === 'free') {
-            //             this.freeOjis[i].tl.clear();
-            //             this.freeOjis[i].tl.to(this.freeOjis[i], { duration: 1, x: cX, y: cY + 32 });
-            //         }
-            //     }
-            // }
+            let cX = app.renderer.plugins.interaction.mouse.global.x;
+            let cY = app.renderer.plugins.interaction.mouse.global.y;
+            if (cX > 0 && cY > 0) {
+                for (let i = 0; i < this.freeOjis.length; i++) {
+                    if (this.freeOjis[i].state === 'free') {
+                        this.freeOjis[i].tl.clear();
+                        this.freeOjis[i].tl.to(this.freeOjis[i], { duration: 1, x: cX, y: cY + 32 });
+                    }
+                }
+            }
         }
         this.cnt++;
     }
