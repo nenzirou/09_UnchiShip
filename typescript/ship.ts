@@ -16,6 +16,7 @@ import { TextWindow } from "./window";
 import { MyText } from "./myText";
 import { Shop } from "./shop";
 import { Quest } from "./quest";
+import { Bar } from "./bar";
 /*
 shipに持たせる機能
 船の全体像
@@ -23,6 +24,7 @@ componentsに各部屋のクラスを保存する
 */
 
 export class Ship extends PIXI.Container {
+    eventFlags: boolean[] = new Array(200);
     rooms: Room[] = new Array();//全ルームを入れる
     warehouses: Room[] = new Array();//倉庫を入れる
     ojis: Ojisan[] = new Array();//全おじさんを入れる
@@ -33,6 +35,8 @@ export class Ship extends PIXI.Container {
     scaleDownButton: Button;//縮小を行うボタン
     stopButton: Button;//時間停止ボタン
     shopButton: Button;//店ボタン
+    barButton: Button;//バーボタン
+    bar: Bar;//バー
     shop: Shop;//店
     questButton: Button;//クエストボタン
     quest: Quest;//クエスト一覧
@@ -49,7 +53,6 @@ export class Ship extends PIXI.Container {
     clickCursor: PIXI.Graphics;//部屋選択のカーソル
     selected: boolean;//決定されたかどうか
     makableItem: boolean = true;//アイテムを生成するかどうか決定
-    enlargement: boolean = false;//拡大しているかどうか
     stop: boolean = false;//ゲームをストップするかどうか
     money: number = 10000000000000;//お金
     cnt: number = 0;
@@ -86,6 +89,7 @@ export class Ship extends PIXI.Container {
     constructor(x: number, y: number, width: number, height: number, gamescene: PIXI.Container) {
         super();
         const tl = gsap.timeline();//タイムライン初期化
+        this.eventFlags.fill(false);//イベントフラグを初期化
         this.clickPosition = new PIXI.Point(0, 0);//クリック座標を初期化
         this.x = x;// 船全体のｘ座標
         this.y = y;// 船全体のｙ座標
@@ -101,24 +105,26 @@ export class Ship extends PIXI.Container {
         this.rocket.visible = false;
         this.addChild(this.rocket);
         //拡大縮小ボタン
-        this.scaleUpButton = new Button("拡大", 50, 50, this.w - 100, this.h + 50, 0, 0x0000ff, 24, 1,true);
-        this.scaleDownButton = new Button("縮小", 50, 50, this.w - 50, this.h + 50, 0, 0x0000ff, 24, 1,true);
+        this.scaleUpButton = new Button("拡大", 50, 50, this.w - 100, this.h + 50, 5, 0x0000ff, 24, 1, true);
+        this.scaleDownButton = new Button("縮小", 50, 50, this.w - 50, this.h + 50, 5, 0x0000ff, 24, 1, true);
         this.scaleUpButton.on('pointertap', () => {
-            if (this.enlargement) {
-                tl.to(this.scale, { duration: 0.2, x: 1, y: 1 })
-                    .to(this.rocket, { duration: 0.2, alpha: 0 })
-                    .call(() => { this.rocket.visible = false; this.rocket.alpha = 1; });
-            } else {
-                tl.call(() => { this.rocket.visible = true; })
-                    .to(this.scale, { duration: 0.2, x: 0.5, y: 0.5 })
-                    .from(this.rocket, { duration: 0.2, alpha: 0 });
+            let scale = this.scale.x + 0.1;
+            if (scale <= 1.0) {
+                this.scale.set(scale);
+                this.position.set((1 - scale) * 200, (1 - scale) * 250);
             }
-            this.enlargement = !this.enlargement;
+        });
+        this.scaleDownButton.on('pointertap', () => {
+            let scale = this.scale.x - 0.1;
+            if (scale >= 0.3) {
+                this.scale.set(scale);
+                this.position.set((1 - scale) * 200, (1 - scale) * 250);
+            }
         });
         gamescene.addChild(this.scaleUpButton);
         gamescene.addChild(this.scaleDownButton);
         //時間停止ボタン
-        this.stopButton = new Button("一時停止", 100, 50, this.w - 200, this.h, 0, 0x333333, 24, 1,true);
+        this.stopButton = new Button("一時停止", 100, 50, this.w - 200, this.h, 5, 0x333333, 24, 1, true);
         this.stopButton.on('pointertap', () => {
             this.stop = !this.stop;
         });
@@ -128,7 +134,7 @@ export class Ship extends PIXI.Container {
         this.shop.visible = false;
         gamescene.addChild(this.shop);
         //店ボタン
-        this.shopButton = new Button("お店", 100, 50, this.w - 200, this.h + 50, 0, 0x00ff00, 24, 1,true);
+        this.shopButton = new Button("お店", 100, 50, 0, this.h, 5, 0x00ff00, 24, 1, true);
         this.shopButton.on('pointertap', () => {
             this.shop.visible = true;
         });
@@ -138,11 +144,21 @@ export class Ship extends PIXI.Container {
         this.quest.visible = false;
         gamescene.addChild(this.quest);
         //クエストボタン
-        this.questButton = new Button("クエスト", 100, 50, this.w - 300, this.h + 50, 0, 0xff00ff, 24, 1,true);
+        this.questButton = new Button("クエスト", 100, 50, 0, this.h + 50, 5, 0xff00ff, 24, 1, true);
         this.questButton.on('pointertap', () => {
             this.quest.visible = true;
         });
         gamescene.addChild(this.questButton);
+        //バー一覧生成
+        this.bar = new Bar(this);
+        this.bar.visible = false;
+        gamescene.addChild(this.bar);
+        //バーボタン
+        this.barButton = new Button("酒場", 100, 50, 100, this.h + 50, 5, 0xffff33, 24, 1, true);
+        this.barButton.on('pointertap', () => {
+            this.bar.visible = true;
+        });
+        gamescene.addChild(this.barButton);
         //クリックされたときの処理
         this.on('pointertap', (e: PIXI.InteractionEvent) => {
             let position = e.data.getLocalPosition(this);
@@ -163,8 +179,9 @@ export class Ship extends PIXI.Container {
         this.clickCursor.visible = false;
         this.addChild(this.clickCursor);
         //部屋を作るUI　第1層
-        this.makingRoomButton = new Button("部屋作成", 100, 50, this.w - 100, this.h, 0, 0x000000, 24, 1,true);//ルーム作成ボタン
+        this.makingRoomButton = new Button("部屋作成", 100, 50, this.w - 100, this.h, 5, 0x000000, 24, 1, true);//ルーム作成ボタン
         this.makingRoomOneLayerWindow = new TextWindow(0, 0, 1, 1, 1, 0.8, false);//ルーム作成第１ウィンドウ
+        this.makingRoomOneLayerWindow.zIndex = 10;
         this.makingRoomOneLayerBack = Room.makeBackButton(0, 0, this.makingRoomOneLayerWindow);//第1層戻るボタン作成
         this.makingRoomOneLayerBack.on('click', () => {//第1層戻るボタンの処理
             Room.changeVisual(this.makingRoomTwoLayerWindows, false);
@@ -207,7 +224,7 @@ export class Ship extends PIXI.Container {
             //第２層戻るボタンの設定
             this.makingRoomTwoLayerBacks.push(Room.makeBackButton(50, 0, this.makingRoomTwoLayerWindows[i]));
             //作成ボタンの挙動
-            const makingButton = new Button("作成", 100, 50, 32, 400, 2, 0x333333, 32, 1,true);
+            const makingButton = new Button("作成", 100, 50, 32, 400, 2, 0x333333, 32, 1, true);
             makingButton.on("pointerup", () => {
                 PIXI.Loader.shared.resources.open.sound.play();
                 //ウィンドウを閉じる処理
@@ -299,6 +316,8 @@ export class Ship extends PIXI.Container {
             this.shop.display(this);
             //クエストの動作を行う
             this.quest.display(this);
+            //酒場の動作を行う
+            this.bar.display(this);
             // アイテムの動作を行う
             for (let i = 0; i < this.items.length; i++) {
                 this.items[i].move(this);

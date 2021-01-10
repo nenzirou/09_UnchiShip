@@ -100,6 +100,7 @@ export abstract class Room extends PIXI.TilingSprite {
         this.y = y;// 部屋のｙ座標
         this.zIndex = -1;//部屋のｚ座標
         this.oneLayerWindow = new TextWindow(0, 0, 1, 1, 1, 0.8, false);
+        this.oneLayerWindow.zIndex = 10;
         gamescene.addChild(this.oneLayerWindow);
         this.interactive = true;
         this.buttonMode = true;

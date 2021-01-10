@@ -43,7 +43,7 @@ export class Ojisan extends PIXI.TilingSprite {
         this.interactiveChildren = false;
         this.on("pointerdown", () => {
             //Button.makeTouchSpeech('hp:' + this.hp + '\n疲労:' + this.fatigue + '\nid:' + this.id + '\n状態' + this.state, 130, 150, 0, 0, 1, 32, 0.8, this);
-            this.addChild(Button.makeSpeech('hp:' + this.hp + '\n疲労:' + this.fatigue + '\nid:' + this.id + '\n状態' + this.state, 5, 130, 150, 0, 0, 1, 32, 0.8));
+            this.addChild(Button.makeSpeech('hp:' + this.hp + '\n疲労:' + this.fatigue + '\nid:' + this.id + '\n状態' + this.state, 0x333333, 5, 130, 150, 0, 0, 1, 32, 0.8));
         })
     }
     move(ship: Ship) {

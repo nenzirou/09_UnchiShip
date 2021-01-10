@@ -29,9 +29,9 @@ app.renderer.backgroundColor = 0x000033;
 
 // ゲームで使用する画像をあらかじめ読み込んでおく(プリロードという)
 // v5.3.2　だと PIXI.Loader.shared.addでプリロードする
-const sound = { hit: "sound/hit.mp3", open: "sound/open.mp3", close: "sound/close.mp3",nSelect: "sound/nSelect.mp3",shop: "sound/shop.mp3"};
+const sound = { hit: "sound/hit.mp3", open: "sound/open.mp3", close: "sound/close.mp3", nSelect: "sound/nSelect.mp3", shop: "sound/shop.mp3" };
 const image = {
-    oji: "image/oji.png", window: "image/window.png", item: "image/item.png", room_building: "image/room_building.png", room_warehouse: "image/box.png", room_wall: "image/room_wall.png", room_work: "image/desk.png", room_aisle: "image/room_aisle.png", room_bed: "image/room_bed.png", rocket: "image/rocket.png"
+    oji: "image/oji.png", window: "image/window.png", item: "image/item.png", room_building: "image/room_building.png", room_warehouse: "image/box.png", room_wall: "image/room_wall.png", room_work: "image/desk.png", room_aisle: "image/room_aisle.png", room_bed: "image/room_bed.png", rocket: "image/rocket.png", map: "image/map.png"
 };
 Object.keys(sound).forEach(key => PIXI.Loader.shared.add(key, sound[key]));
 Object.keys(image).forEach(key => PIXI.Loader.shared.add(key, image[key]));

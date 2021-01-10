@@ -36,7 +36,6 @@ export class Quest extends PIXI.Sprite {
     ];
     quests: number[];//クエストリスト
     backButton: Button;//戻るボタン
-    moneyText: MyText;//お金表示
     max: number = 10;//クエスト最大数
     oneLayerTitleText: MyText;//クエストタイトルテキスト
     oneLayerButtons: Button[] = [];//クエスト詳細ボタン
@@ -56,9 +55,6 @@ export class Quest extends PIXI.Sprite {
         this.alpha = 1;
         //戻るボタン作成
         this.backButton = Room.makeBackButton(0, 0, this);
-        //所持金表示テキスト作成
-        this.moneyText = new MyText("", 100, 5, 0, 20, 32, 0xdddd33);
-        this.addChild(this.moneyText);
         //「クエスト一覧」テキスト作成
         this.addChild(new MyText("クエスト一覧", 100, 0, 1, 32, 32, 0x333333));
         //クエストタイトルテキスト作成
