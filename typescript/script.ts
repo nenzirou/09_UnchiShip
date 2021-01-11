@@ -12,26 +12,23 @@ const app = new PIXI.Application({ width: 400, height: 600 });
 // index.htmlのbodyにapp.viewを追加する (app.viewはcanvasのdom要素)
 document.body.appendChild(app.view);
 
+
 // ゲームcanvasのcssを定義する
 // ここで定義した画面サイズ(width,height)は実際に画面に表示するサイズ
 app.renderer.view.style.position = "relative";
 app.renderer.view.style.width = "400px";
 app.renderer.view.style.height = "600px";
 app.renderer.view.style.display = "block";
-//app.renderer.resolution = window.devicePixelRatio || 1;
 app.renderer.view.autofocus = true;
-
 // canvasの周りを点線枠で囲う (canvasの位置がわかりやすいので入れている)
 app.renderer.view.style.border = "2px dashed black";
-
 // canvasの背景色
 app.renderer.backgroundColor = 0x000033;
-
 // ゲームで使用する画像をあらかじめ読み込んでおく(プリロードという)
 // v5.3.2　だと PIXI.Loader.shared.addでプリロードする
-const sound = { hit: "sound/hit.mp3", open: "sound/open.mp3", close: "sound/close.mp3", nSelect: "sound/nSelect.mp3", shop: "sound/shop.mp3" };
+const sound = { bgm1:"sound/bgm1.mp3", open: "sound/open.mp3", close: "sound/close.mp3", nSelect: "sound/nSelect.mp3", shop: "sound/shop.mp3", shopButton: "sound/shopButton.mp3", questButton: "sound/questButton.mp3", barButton: "sound/barButton.mp3", mapButton: "sound/mapButton.mp3", building: "sound/building.mp3", complete: "sound/complete.mp3" };
 const image = {
-    oji: "image/oji.png", window: "image/window.png", item: "image/item.png", room_building: "image/room_building.png", room_warehouse: "image/box.png", room_wall: "image/room_wall.png", room_work: "image/desk.png", room_aisle: "image/room_aisle.png", room_bed: "image/room_bed.png", rocket: "image/rocket.png", map: "image/map.png"
+    oji: "image/oji.png", window: "image/window.png", cursor: "image/cursor.png", item: "image/item.png", room_building: "image/room_building.png", room_warehouse: "image/box.png", room_wall: "image/room_wall.png", room_work: "image/desk.png", room_aisle: "image/room_aisle.png", room_bed: "image/room_bed.png", rocket: "image/rocket.png", map: "image/map.png", menu: "image/menu.jpg"
 };
 Object.keys(sound).forEach(key => PIXI.Loader.shared.add(key, sound[key]));
 Object.keys(image).forEach(key => PIXI.Loader.shared.add(key, image[key]));

@@ -28,9 +28,6 @@ interface roomInfo {
 }
 export type stringRoomState = 'free' | 'using' | 'gathering' | 'preparation' | 'build' | 'build_gathering' | 'build_preparation' | 'build_using';
 export abstract class Room extends PIXI.TilingSprite {
-    //static roomList = { 0: '壁', 1: '通路', 2: '倉庫', 3: 'ベッド', 4: '作業場' };
-    //static roomMakeList = { /*倉庫*/2: [[1, 1], [2, 1]], /*ベッド*/3: [[3, 1], [4, 3]], /*作業場*/4: [[4, 2], [5, 2]] };
-
     static roomInfo: roomInfo[] = [
         {
             name: '壁',
@@ -78,7 +75,7 @@ export abstract class Room extends PIXI.TilingSprite {
     kind: number = 4;// 倉庫のアイテムを入れられる種類
     itemlist: itemList[] = [];//この部屋に格納されているアイテムリスト
     needItems: number[] = [];//欲しいものリスト
-    defoltTexture: PIXI.Texture;
+    defaultTexture: PIXI.Texture;
     id: number;
     level: number = 0;
     state: stringRoomState;
@@ -89,11 +86,12 @@ export abstract class Room extends PIXI.TilingSprite {
     ojiMax: number = 4;// おじさんを入れられる最大数
     constructor(id: number, x: number, y: number, texture: PIXI.Texture, gamescene: PIXI.Container, state: stringRoomState) {
         super(texture, 50, 50);
-        console.log(PIXI.Loader.shared.resources["room_wall"].texture);
-        this.defoltTexture = texture;
+        this.defaultTexture = texture;
         this.state = state;
         if (this.state === 'build') this.build = false;
-        else this.build = true;
+        else {
+            this.build = true;
+        }
         this.id = id;//部屋のID
         this.anchor.set(0.5);//ローカル座標の始点を真ん中にする
         this.x = x;// 部屋のｘ座標
@@ -282,7 +280,7 @@ export abstract class Room extends PIXI.TilingSprite {
     }
     //戻るボタンを作成する
     static makeBackButton(x: number, y: number, closeWindow: PIXI.Container) {
-        const button = new Button("戻る", 50, 30, x, y, 2, 0x555555, 20, 1,true);
+        const button = new Button("戻る", 50, 30, x, y, 2, 0x555555, 20, 1, true);
         button.on("pointerup", () => {
             PIXI.Loader.shared.resources.close.sound.play();
             closeWindow.visible = false;
@@ -302,6 +300,7 @@ export abstract class Room extends PIXI.TilingSprite {
     }
     //毎フレーム実行される 建築状態になったらアイテムを集めて建築を行う
     buildRoom(ship: Ship) {
+        this.cnt++;
         if (this.state === 'build') {
             this.texture = PIXI.Loader.shared.resources.room_building.texture;
             this.state = 'build_gathering';
@@ -311,10 +310,10 @@ export abstract class Room extends PIXI.TilingSprite {
         }
         if (this.makingItem == 0 && this.needItems.length == 0 && this.state === 'build_gathering') {
             //アイテムがRoomの倉庫に揃っているかどうかを調べる
-            const needItemlist: itemList[] = Room.roomInfo[this.id].need;//[[],[]]型がくる
+            const needItemlist: itemList[] = Room.roomInfo[this.id].need;//型がくる
             let judge: boolean = true;
             for (let i = 0; i < needItemlist.length; i++) {
-                if (Room.judgeHavingItem(this.itemlist, needItemlist[i][0], needItemlist[i][1]) == -1) judge = false;
+                if (Room.judgeHavingItem(this.itemlist, needItemlist[i].id, needItemlist[i].num) == -1) judge = false;
             }
             if (judge) {//部屋の倉庫に部屋を作るためのアイテムが揃っていた場合
                 //近くのフリーおじさんを見つける
@@ -325,6 +324,7 @@ export abstract class Room extends PIXI.TilingSprite {
                     oji.tl
                         .to(oji, { duration: Room.len(oji.x, oji.y, this.x, this.y) / oji.speed + 0.01, x: this.x, y: this.y })//部屋に向かう
                         .call(() => {//部屋を作成する処理
+                            PIXI.Loader.shared.resources.building.sound.play();
                             oji.visible = false;
                             this.ojiID.push(oji.id);
                             this.state = 'build_using'
@@ -339,14 +339,15 @@ export abstract class Room extends PIXI.TilingSprite {
                 if (this.tilePosition.x == 0) this.tilePosition.x += 50;
             }
             if (this.makeCnt <= 0) {
-                this.texture = this.defoltTexture;
+                this.texture = this.defaultTexture;
                 this.tilePosition.x = 0;
                 this.state = 'free';
                 Room.allFreeOji(ship.ojis, this.ojiID);
                 this.ojiID = [];
                 this.interactive = true;
                 this.build = true;
-                ship.addChild(Button.makeSpeech(Room.roomInfo[this.id].name + "が完成した！",0xdd3333, 3, 400, 50, 0, 200, 1, 20, 0.8));
+                PIXI.Loader.shared.resources.complete.sound.play();
+                ship.addChild(Button.makeSpeech(Room.roomInfo[this.id].name + "が完成した！", 0xdd3333, 3, 400, 50, 0, 200, 1, 20, 0.8));
             }
             this.makeCnt--;
         }
@@ -354,7 +355,7 @@ export abstract class Room extends PIXI.TilingSprite {
     //必要リストに載っているアイテムを集める
     gatherNeedItem(ship: Ship) {
         //必要素材リストに載っているアイテムを集める
-        if (this.cnt % 300 == 0) {
+        if (this.cnt % 300 == 1) {
             for (let i = 0; i < this.needItems.length; i++) {
                 Room.gatherItem(ship, this, this.needItems[i]);
             }

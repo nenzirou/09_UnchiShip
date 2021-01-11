@@ -100,7 +100,6 @@ export class Room_work extends Room {
                                     oji.visible = false;
                                     this.ojiID.push(oji.id);
                                     this.state = 'using'
-                                    console.log(this.itemlist);
                                     this.itemlist = [];
                                     this.makeCnt = 60 * 10;
                                 });
@@ -126,7 +125,6 @@ export class Room_work extends Room {
                     this.makeCnt--;
                 }
             }
-            this.cnt++;
         }
     }
     startMakeItem(id: number) {
