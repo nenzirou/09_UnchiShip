@@ -10,13 +10,14 @@ import { TextWindow } from "./window";
 import { Stage } from "./stage";
 
 export class Map extends PIXI.Sprite {
-    //sI groupid,x,y
+    //sI color,x,y
     sI: number[][] = [[0xdddd33, 15, 15], [0xdddd33, 55, 15]];
     backButton: Button;//戻るボタン
     oneLayerTitleText: MyText;//マップ名テキスト
     ojisanIcon: PIXI.Sprite;//マップ選択アイコン
     map: PIXI.Sprite;//マップ
     mapCursor: PIXI.Sprite;//カーソル
+    currentCursor: PIXI.Sprite;//現在位置のカーソル
     selectMapId: number;//現在選んでいるマップのID
     constructor(ship: Ship) {
         super(PIXI.Loader.shared.resources.window.texture);
@@ -48,6 +49,12 @@ export class Map extends PIXI.Sprite {
         this.mapCursor.interactive = true;
         this.map.addChild(this.mapCursor);
         tl.from(this.mapCursor, { duration: 2, rotation: Math.PI * 2, repeat: -1, ease: "none" });
+        //現在地カーソル作成
+        this.currentCursor = new PIXI.Sprite(PIXI.Loader.shared.resources["cursor2"].texture);
+        this.currentCursor.zIndex = 4;
+        this.currentCursor.anchor.set(0.5);
+        this.currentCursor.scale.set(0.7);
+        this.map.addChild(this.currentCursor);
         //マップアイコン作成
         for (let i = 0; i < this.sI.length; i++) {
             const mapIcon = new PIXI.Sprite();
@@ -65,12 +72,29 @@ export class Map extends PIXI.Sprite {
             this.map.addChild(mapIcon);
         }
         this.mapCursor.on("pointertap", () => {
-            if (ship.stageID != this.selectMapId) {
+            const distance = Map.getDistanceOfMapToMap(ship.stageID, this.selectMapId);
+            if (distance != -1 && !ship.going) {//マップが繋がっている時
+                PIXI.Loader.shared.resources.letsGo.sound.play();//掛け声
                 ship.shop.setBuyingProduct(Stage.stageInfo[this.selectMapId].sellList);//店売り商品セット
                 ship.quest.setQuestList(Stage.stageInfo[this.selectMapId].questList);//クエストセット
                 ship.bar.setTalkList(Stage.stageInfo[this.selectMapId].barList);//小話セット
-                ship.stageID = this.selectMapId;
+                ship.distStageID = this.selectMapId;//目的地設定
+                ship.goalPosition = distance;//目的地までの距離設定
+                ship.going = true;//出発！
             }
         });
+    }
+    display(ship: Ship) {
+        if (this.visible) {
+            this.currentCursor.position.set(this.sI[ship.stageID][1] + (this.sI[ship.distStageID][1] - this.sI[ship.stageID][1]) * ship.mapPosition / ship.goalPosition, this.sI[ship.stageID][2] - 5);
+        }
+    }
+    //マップが繋がっていればマップ同士の距離を返す。繋がってなければ-1を返す
+    static getDistanceOfMapToMap(mapID1: number, mapID2: number) {
+        const linkList = Stage.stageInfo[mapID1].linkList;
+        for (let i = 0; i < linkList.length; i++) {
+            if (linkList[i][0] == mapID2) return linkList[i][1];
+        }
+        return -1;
     }
 }

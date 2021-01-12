@@ -160,7 +160,7 @@ export class Item extends PIXI.TilingSprite {
     }
     move(ship: Ship) {
         if (this.state === 'out') {
-            this.y += 70;
+            this.y += 1;
             if (this.y >= 250) {
                 this.state = 'reserved';
                 let x = this.x;
