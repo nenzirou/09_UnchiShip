@@ -76,14 +76,14 @@ export class Ship extends PIXI.Container {
 
     initialRoom: number[][] = [
         [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 3, 3, 3, 3, 3, 3, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 4, 0, 0, 0, 0, 4, 0],
+        [0, 0, 1, 1, 1, 1, 0, 0],
+        [0, 0, 1, 1, 1, 1, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 2, 2, 2, 2, 2, 2, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
     ];
     constructor(x: number, y: number, width: number, height: number, gamescene: PIXI.Container) {
@@ -123,7 +123,7 @@ export class Ship extends PIXI.Container {
         this.rocket.visible = false;
         this.addChild(this.rocket);
         this.ship = new PIXI.TilingSprite(PIXI.Loader.shared.resources.ship.texture, 500, 600);
-        this.ship.position.set(-50, -100);
+        this.ship.position.set(-50, -99);
         this.addChild(this.ship);
         //メニューバー
         this.menu = new PIXI.Sprite(PIXI.Loader.shared.resources.menu.texture);
@@ -295,7 +295,7 @@ export class Ship extends PIXI.Container {
                     this.fuel--;
                     if (this.goalPosition == this.mapPosition) {
                         PIXI.Loader.shared.resources.complete.sound.play();
-                        this.gamescene.addChild(Button.makeSpeech("目的地に到着した！", 0xff3333, 2, 400, 50, 0, 200, 10, 25, 0.9));
+                        this.gamescene.addChild(Button.makeSpeech("目的地に到着した！", 0xff3333, 2, 400, 25, 0, 200, 10, 25, 0.9));
                         this.going = false;
                         this.mapPosition = 0;
                         this.goalPosition = 1;

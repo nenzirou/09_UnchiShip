@@ -21,7 +21,7 @@ app.renderer.view.style.height = "600px";
 app.renderer.view.style.display = "block";
 app.renderer.view.autofocus = true;
 // canvasの周りを点線枠で囲う (canvasの位置がわかりやすいので入れている)
-app.renderer.view.style.border = "2px dashed black";
+//app.renderer.view.style.border = "2px dashed black";
 // canvasの背景色
 app.renderer.backgroundColor = 0x000033;
 // ゲームで使用する画像をあらかじめ読み込んでおく(プリロードという)

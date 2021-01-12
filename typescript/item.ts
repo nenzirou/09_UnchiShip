@@ -172,30 +172,21 @@ export class Item extends PIXI.TilingSprite {
             }
         } else if (this.state === 'in') {
             if (this.cnt % 300 == 1 && ship.freeOjis.length != 0) {
-                let warehouse = this.findSameItemWarehouse(ship, this.id);
-                if (warehouse === undefined) warehouse = this.findEmptyWarehouse(ship);
+                let warehouse = this.findSameItemWarehouse(ship, this.id);//同じ種類のアイテムが格納されている倉庫を探す
+                if (warehouse === undefined) warehouse = this.findEmptyWarehouse(ship);//もし上記が無かった場合、空きのある倉庫を探す
                 // 倉庫が見つけられた時の処理
                 if (warehouse !== undefined) {
-                    //一番近くにいるフリーおじさんを探し、そのおじさんに倉庫までアイテムを運ばせる
-                    let min: number = this.len(ship.freeOjis[0].x, ship.freeOjis[0].y);
-                    let ojiN: number = 0;
-                    for (let i = 1; i < ship.freeOjis.length; i++) {
-                        let len = this.len(ship.freeOjis[i].x, ship.freeOjis[i].y);
-                        if (min > len) {
-                            min = len;
-                            ojiN = i;
-                        }
+                    const oji = Room.findNearFreeOji(ship, this.x, this.y);//一番近くにいるフリーおじさんを探す
+                    if (oji != undefined) {
+                        this.state = 'reserved';//アイテムを予約済みにする
+                        oji.state = 'transport';//おじさんを輸送状態にする
+                        oji.tl
+                            .clear()
+                            .to(oji, { duration: Room.len(this.x, this.y, oji.x, oji.y) / oji.speed, x: this.x, y: this.y })
+                            .call(this.stick, [ship, this, oji])
+                            .to(oji, { duration: Room.len(this.x, this.y, warehouse.x, warehouse.y) / oji.speed, x: warehouse.x, y: warehouse.y })
+                            .call(this.putItem, [warehouse, this, oji, ship]);
                     }
-                    let oji: Ojisan = ship.freeOjis[ojiN];
-                    ship.freeOjis.splice(ojiN, 1);
-                    this.state = 'reserved';
-                    oji.state = 'transport';
-                    oji.tl.clear();
-                    oji.tl
-                        .to(oji, { duration: min / oji.speed, x: this.x, y: this.y })
-                        .call(this.stick, [ship, this, oji])
-                        .to(oji, { duration: this.len(warehouse.x, warehouse.y) / oji.speed, x: warehouse.x, y: warehouse.y })
-                        .call(this.putItem, [warehouse, this, oji, ship]);
                 }
                 if (this.cnt > 60 * 60) {
                     this.state = 'garbage';
@@ -209,10 +200,6 @@ export class Item extends PIXI.TilingSprite {
             this.tl.from(this.scale, { duration: 1, x: 0.1, y: 0.1, ease: 'back.out(10)' });
             this.tl.call(() => this.state = 'in');
         }
-    }
-    //おじさんとアイテムの距離を測る
-    len(x: number, y: number) {
-        return Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(y - this.y, 2)) + 1;
     }
     // おじさんとアイテムをくっつける
     stick(ship: Ship, item: Item, oji: Ojisan) {
@@ -263,7 +250,7 @@ export class Item extends PIXI.TilingSprite {
                     warehouse.itemlist[i].num += item.num;
                 }
                 listed = true;
-                item.removeItem();
+                item.state = 'garbage';
                 break;
             }
         }
@@ -271,17 +258,12 @@ export class Item extends PIXI.TilingSprite {
         if (!listed) {
             if (warehouse.itemlist.length < warehouse.kind) {
                 warehouse.pushItemlist(item.id, item.num);
-                item.removeItem();
+                item.state = 'garbage';
             } else {
                 item.popItem(ship, oji, warehouse.x, warehouse.y, item.num);
             }
         }
         oji.tl.clear();
-        //PIXI.Loader.shared.resources.close.sound.play();
-    }
-    // アイテムの削除
-    removeItem() {
-        this.state = 'garbage';
     }
     // アイテムを地面に落とす
     popItem(ship: Ship, oji: Ojisan, x: number, y: number, num: number) {

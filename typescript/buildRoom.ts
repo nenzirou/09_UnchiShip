@@ -27,10 +27,15 @@ export class BuildRoom extends PIXI.Sprite {
         this.clickPosition = new PIXI.Point(0, 0);//クリック座標を初期化
         //クリックされたときの処理
         ship.on('pointertap', (e: PIXI.InteractionEvent) => {
-            let position = e.data.getLocalPosition(this);
+            const position = e.data.getLocalPosition(this);
             position.set(Math.floor(position.x / 50) * 50, Math.floor(position.y / 50) * 50);
             if (this.clickPosition.x == position.x && this.clickPosition.y == position.y) {
-                this.selected = true;
+                if (ship.rooms[Math.floor(position.y / 50) * ship.rW + Math.floor(position.x / 50)].id == 1) {
+                    this.selected = true;
+                } else {
+                    PIXI.Loader.shared.resources.nSelect.sound.play();
+                    ship.gamescene.addChild(Button.makeSpeech("通路にしか部屋は立てられません。", 0x333333, 1.5, 400, 25, 0, 200, 5, 25, 0.9));
+                }
             } else {
                 this.clickPosition = position;
                 tl.to(this.clickCursor, { duration: 0.05, x: this.clickPosition.x, y: this.clickPosition.y });
@@ -113,6 +118,7 @@ export class BuildRoom extends PIXI.Sprite {
             for (let j = 0; j < ship.rooms.length; j++) {//全ての部屋をタッチできるようにする
                 ship.rooms[j].interactive = true;
             }
+            this.clickPosition.set(0, 0);
         }
         if (this.makingRoomOneLayerWindow.visible) {
             //テキスト更新

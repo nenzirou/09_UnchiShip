@@ -159,46 +159,71 @@ export abstract class Room extends PIXI.TilingSprite {
     }
     //必要なアイテムを探し、集める
     static gatherItem(ship: Ship, room: Room, id: number) {
-        if (ship.freeOjis.length == 0) return false;
-        const warehouse: Room = Room.findItemFromWarehouse(ship, id);
-        if (warehouse === undefined) return false;
-        const oji = Room.findNearFreeOji(ship, room.x, room.y);
-        if (oji === undefined) return false;
-        oji.state = 'transport';
-        oji.tl
-            .to(oji, { duration: Room.len(oji.x, oji.y, warehouse.x, warehouse.y) / oji.speed, x: warehouse.x, y: warehouse.y })//倉庫に向かう
-            .call(() => {//おじさんが倉庫からアイテムを取りだす処理
-                let tmp = Room.judgeHavingItem(warehouse.itemlist, id, 1);
-                if (tmp != -1) {//おじさんが倉庫にたどり着いた時にアイテムが格納されている場合
-                    PIXI.Loader.shared.resources.open.sound.play();
-                    warehouse.itemlist[tmp].num--;
-                    Room.stickItemToOji(oji, id);
-                } else {//おじさんがたどり着いた頃にはもう必要なアイテムは倉庫になかった場合
-                    Room.freeOji(oji);
+        if (ship.freeOjis.length == 0) return false;//フリーおじさんがいない場合
+        const warehouse: Room = Room.findItemFromWarehouse(ship, id);//倉庫から指定したアイテムを探す
+        let mode = 0;
+        let item: Item;
+        if (warehouse === undefined) {//アイテムを持っている倉庫が無かった場合
+            for (let i = 0; i < ship.items.length; i++) {
+                if (ship.items[i].id == id && ship.items[i].state === 'in') {//欲しいアイテムが地面に落ちていた場合
+                    ship.items[i].state = "reserved";//アイテムを予約
+                    item = ship.items[i];//アイテム情報を取得
+                    mode = 1;//モード変更
+                    break;
+                }
+            }
+            if (item === undefined) return false;//地面にも落ちてなかった場合
+        };
+        const oji = Room.findNearFreeOji(ship, room.x, room.y);//一番近くのフリーおじさんを探す
+        oji.state = 'transport';//おじさんの状態を輸送状態に変更
+        if (mode == 0) {//倉庫からアイテムを持ってくる場合
+            oji.tl
+                .to(oji, { duration: Room.len(oji.x, oji.y, warehouse.x, warehouse.y) / oji.speed, x: warehouse.x, y: warehouse.y })//倉庫に向かう
+                .call(() => {//おじさんが倉庫からアイテムを取りだす処理
+                    const tmp = Room.judgeHavingItem(warehouse.itemlist, id, 1);
+                    if (tmp != -1) {//おじさんが倉庫にたどり着いた時にアイテムが格納されている場合
+                        PIXI.Loader.shared.resources.open.sound.play();
+                        warehouse.itemlist[tmp].num--;
+                        Room.stickItemToOji(oji, id);
+                    } else {//おじさんがたどり着いた頃にはもう必要なアイテムは倉庫になかった場合
+                        Room.freeOji(oji);
+                    }
+                })
+                .to(oji, { duration: Room.len(room.x, room.y, warehouse.x, warehouse.y) / oji.speed, x: room.x, y: room.y })//対称の部屋に向かう
+        } else {//地面のアイテムを持ってくる場合
+            oji.tl
+            .to(oji, { duration: Room.len(oji.x, oji.y, item.x, item.y) / oji.speed, x: item.x, y: item.y })//アイテムに向かう
+                .call(() => {//おじさんが倉庫からアイテムを取りだす処理
+                if(item.state==='reserved'){
+                    Room.stickItemToOji(oji, id);//アイテムをおじさんにくっつける
+                    item.state = 'garbage';//アイテムを破棄
+                } else {//おじさんがたどり着いた頃にはもう必要なアイテムはなかった場合
+                    Room.freeOji(oji);//おじさんを解放
                 }
             })
-            .to(oji, { duration: Room.len(room.x, room.y, warehouse.x, warehouse.y) / oji.speed, x: room.x, y: room.y })//対称の部屋に向かう
-            .call(() => {//持ってきたアイテムを格納する処理
-                let judge = false;
-                for (let i = 0; i < room.needItems.length; i++) {
-                    if (room.needItems[i] == id) {//欲しいものリストに持ってきたアイテムがあったら
-                        judge = true;
-                        room.needItems.splice(i, 1);
-                        break;
-                    }
+            .to(oji, { duration: Room.len(room.x, room.y, item.x, item.y) / oji.speed, x: room.x, y: room.y })//対称の部屋に向かう
+        }
+        oji.tl.call(() => {//持ってきたアイテムを格納する処理
+            let judge = false;
+            for (let i = 0; i < room.needItems.length; i++) {
+                if (room.needItems[i] == id) {//欲しいものリストに持ってきたアイテムがあったら
+                    judge = true;
+                    room.needItems.splice(i, 1);
+                    break;
                 }
-                if (judge) {//欲しいものリストにアイテムが載っていた場合、格納する
-                    let tmp = Room.judgeHavingItem(room.itemlist, id, 1);
-                    if (tmp != -1) {
-                        room.itemlist[tmp].num++;
-                    } else {
-                        room.pushItemlist(id, 1);
-                    }
-                } else {//欲しいものリストにアイテムが載っていなかった場合、アイテムはその辺に置く
-                    Ship.makeItem(ship, room.x, room.y, id, 1, 'in');
+            }
+            if (judge) {//欲しいものリストにアイテムが載っていた場合、格納する
+                let tmp = Room.judgeHavingItem(room.itemlist, id, 1);
+                if (tmp != -1) {
+                    room.itemlist[tmp].num++;
+                } else {
+                    room.pushItemlist(id, 1);
                 }
-                Room.freeOji(oji);
-            });
+            } else {//欲しいものリストにアイテムが載っていなかった場合、アイテムはその辺に置く
+                Ship.makeItem(ship, room.x, room.y, id, 1, 'in');
+            }
+            Room.freeOji(oji);
+        });
         return true;
     }
     //倉庫から指定したアイテムを探し、アイテムがあればそれが格納されている倉庫を返す
@@ -347,7 +372,7 @@ export abstract class Room extends PIXI.TilingSprite {
                 this.interactive = true;
                 this.build = true;
                 PIXI.Loader.shared.resources.complete.sound.play();
-                ship.addChild(Button.makeSpeech(Room.roomInfo[this.id].name + "が完成した！", 0xdd3333, 3, 400, 50, 0, 200, 1, 20, 0.8));
+                ship.addChild(Button.makeSpeech(Room.roomInfo[this.id].name + "が完成した！", 0xdd3333, 3, 400, 25, 0, 200, 1, 20, 0.8));
             }
             this.makeCnt--;
         }
