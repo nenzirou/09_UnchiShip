@@ -11,7 +11,7 @@ import { Stage } from "./stage";
 
 export class Map extends PIXI.Sprite {
     //sI color,x,y
-    sI: number[][] = [[0xdddd33, 15, 15], [0xdddd33, 55, 15]];
+    sI: number[][] = [[0xdddd33, 15, 15], [0xdddd33, 55, 15], [0xdddd33, 92, 51], [0xdddd33, 47, 82], [0xdddd33, 103, 103]];
     backButton: Button;//戻るボタン
     oneLayerTitleText: MyText;//マップ名テキスト
     ojisanIcon: PIXI.Sprite;//マップ選択アイコン
@@ -19,6 +19,8 @@ export class Map extends PIXI.Sprite {
     mapCursor: PIXI.Sprite;//カーソル
     currentCursor: PIXI.Sprite;//現在位置のカーソル
     selectMapId: number;//現在選んでいるマップのID
+    sellingItems: Item[] = [];//売っているアイテムのアイコン
+    distanceText: MyText;//消費燃料表示テキスト
     constructor(ship: Ship) {
         super(PIXI.Loader.shared.resources.window.texture);
         const tl = gsap.timeline();//タイムライン初期化
@@ -35,6 +37,14 @@ export class Map extends PIXI.Sprite {
         //マップ名テキスト作成
         this.oneLayerTitleText = new MyText(Stage.stageInfo[0].name, 20, 37, 1, 24, 35, 0x333333);
         this.addChild(this.oneLayerTitleText);
+        //売ってるアイテムアイコン作成
+        for (let i = 0; i < 10; i++) {
+            this.sellingItems.push(Room.makeDisplayItem(35 * (i + 1), 80, 1, this, false));
+            this.addChild(this.sellingItems[i]);
+        }
+        //燃費テキスト
+        this.distanceText = new MyText("", 20, 100, 1, 24, 35, 0x333333);
+        this.addChild(this.distanceText);
         //全体マップ作成
         this.map = new PIXI.Sprite(PIXI.Loader.shared.resources["map"].texture);
         this.map.sortableChildren = true;
@@ -55,19 +65,20 @@ export class Map extends PIXI.Sprite {
         this.currentCursor.anchor.set(0.5);
         this.currentCursor.scale.set(0.7);
         this.map.addChild(this.currentCursor);
+
         //マップアイコン作成
         for (let i = 0; i < this.sI.length; i++) {
             const mapIcon = new PIXI.Sprite();
             mapIcon.interactive = true;
             const backColor = new PIXI.Graphics(); // グラフィックオブジェクト（背景に半透明な四角を配置するために使用）
             backColor.beginFill(this.sI[i][0], 1); // 色、透明度を指定して描画開始
-            backColor.drawCircle(this.sI[i][1], this.sI[i][2], 11);//円描画
+            backColor.drawCircle(this.sI[i][1], this.sI[i][2], 12);//円描画
             backColor.endFill(); // 描画完了
             mapIcon.addChild(backColor); // 背景をボタンコンテナに追加
             mapIcon.on('pointertap', () => {
                 this.selectMapId = i;//選択ステージ記憶
-                this.mapCursor.position.set(this.sI[this.selectMapId][1], this.sI[this.selectMapId][2]);//カーソルセット
-                this.oneLayerTitleText.setText(Stage.stageInfo[i].name);//選択ステージ名更新
+                gsap.core.Tween.to(this.mapCursor.position, { duration: 0.2, x: this.sI[this.selectMapId][1], y: this.sI[this.selectMapId][2] });
+                this.updateDisplay(ship.stageID, i, ship.fuel,ship.going);
             });
             this.map.addChild(mapIcon);
         }
@@ -75,6 +86,8 @@ export class Map extends PIXI.Sprite {
             const distance = Map.getDistanceOfMapToMap(ship.stageID, this.selectMapId);
             if (distance != -1 && !ship.going) {//マップが繋がっている時
                 PIXI.Loader.shared.resources.letsGo.sound.play();//掛け声
+                this.visible = false;
+                this.distanceText.setText("");
                 ship.shop.setBuyingProduct(Stage.stageInfo[this.selectMapId].sellList);//店売り商品セット
                 ship.quest.setQuestList(Stage.stageInfo[this.selectMapId].questList);//クエストセット
                 ship.bar.setTalkList(Stage.stageInfo[this.selectMapId].barList);//小話セット
@@ -83,6 +96,7 @@ export class Map extends PIXI.Sprite {
                 ship.going = true;//出発！
             }
         });
+        this.updateDisplay(0, 0, ship.fuel,ship.going);
     }
     display(ship: Ship) {
         if (this.visible) {
@@ -96,5 +110,17 @@ export class Map extends PIXI.Sprite {
             if (linkList[i][0] == mapID2) return linkList[i][1];
         }
         return -1;
+    }
+    updateDisplay(currentStageID: number, selectStageID: number, fuel: number,going:boolean) {
+        this.oneLayerTitleText.setText(Stage.stageInfo[selectStageID].name);//選択ステージ名更新
+        const distance = Map.getDistanceOfMapToMap(currentStageID, selectStageID);
+        const resultFuel = fuel - distance;
+        if (distance != -1&&!going) this.distanceText.setText("燃料:" + fuel + " >> " + resultFuel);
+        else this.distanceText.setText("");
+        const sellingList = Stage.stageInfo[this.selectMapId].sellList;
+        for (let i = 0; i < 10; i++) {//店売りアイテムアイコン更新
+            if (i < sellingList.length) Item.changeItem(this.sellingItems[i], sellingList[i][0]);
+            else Item.changeItem(this.sellingItems[i], 0);
+        }
     }
 }

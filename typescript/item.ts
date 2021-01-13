@@ -12,133 +12,91 @@ id
 interface itemInfo {
     name: string;//アイテムの名前
     need: itemList[];//アイテムを作るのに必要なアイテム
-    num: number;//アイテムを作るとき何個できるか
-    buy: number;//アイテムの買値
     sell: number;//アイテムの売値
 }
 export type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage' | 'display' | 'made';
 export class Item extends PIXI.TilingSprite {
     static itemInfo: itemInfo[] = [
         {
-            name: '無',
+            name: 'バグアイテム',
             need: [],
-            num: 1,
-            buy: 0,
             sell: 0
         }, {
             name: 'うんち',
             need: [],
-            num: 1,
-            buy: 0,
             sell: 5
         }, {
             name: '粘土',
             need: [],
-            num: 1,
-            buy: 0,
             sell: 5
         }, {
             name: '土器',
             need: [{ id: 2, num: 1 }, { id: 5, num: 1 }],
-            num: 1,
-            buy: 0,
             sell: 50
         }, {
             name: 'レンガ',
             need: [{ id: 2, num: 2 }],
-            num: 1,
-            buy: 0,
             sell: 50
         }, {
             name: '水',
             need: [],
-            num: 1,
-            buy: 0,
-            sell: 5
+            sell: 15
         }, {
             name: 'スクラップ',
             need: [],
-            num: 1,
-            buy: 0,
             sell: 5
         }, {
             name: '鉄板',
             need: [{ id: 6, num: 1 }],
-            num: 1,
-            buy: 0,
             sell: 50
         }, {
             name: 'ネジ',
             need: [{ id: 6, num: 1 }],
-            num: 1,
-            buy: 0,
             sell: 50
         }, {
             name: 'ドライバー',
             need: [{ id: 6, num: 1 }],
-            num: 1,
-            buy: 0,
             sell: 50
         }, {
             name: '砂',
             need: [{ id: 11, num: 1 }],
-            num: 1,
-            buy: 0,
             sell: 5
         }, {
             name: '岩',
             need: [],
-            num: 1,
-            buy: 0,
             sell: 5
         }, {
             name: '枯れ枝',
             need: [],
-            num: 1,
-            buy: 0,
             sell: 5
         }, {
             name: '木材',
             need: [{ id: 12, num: 2 }],
-            num: 1,
-            buy: 0,
             sell: 50
         }, {
             name: 'イス',
             need: [{ id: 13, num: 1 }],
-            num: 1,
-            buy: 0,
             sell: 50
         }, {
             name: '布切れ',
             need: [],
-            num: 1,
-            buy: 0,
             sell: 5
         }, {
             name: '枕',
             need: [{ id: 15, num: 1 }],
-            num: 1,
-            buy: 0,
             sell: 50
         }, {
             name: 'ベッド',
             need: [{ id: 15, num: 1 }, { id: 13, num: 4 }],
-            num: 1,
-            buy: 0,
             sell: 50
         }, {
             name: 'ドラム缶',
             need: [],
-            num: 1,
-            buy: 0,
             sell: 100
         }, {
-            name: '',
+            name: '桃',
             need: [],
-            num: 1,
-            buy: 0,
-            sell: 0
+            sell: 10
         },
     ];
     num: number;

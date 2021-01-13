@@ -10,7 +10,11 @@ export class MyText extends PIXI.Text {
             fontWeight: 'bold',
             fill: fill, // 色(16進数で定義するので#ffffffと書かずに0xffffffと書く)
             dropShadow: true, // ドロップシャドウを有効にする（右下に影をつける）
-            dropShadowDistance: 1, // ドロップシャドウの影の距離
+            dropShadowDistance: 1, // ドロップシャドウの影の距離d
+            dropShadowAlpha: 0.9,
+            wordWrap: true,
+            wordWrapWidth: 360,
+            breakWords:true
         });
         this.style = textStyle;
         this.x = x;// ウィンドウのｘ座標

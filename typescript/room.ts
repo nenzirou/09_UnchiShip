@@ -314,7 +314,7 @@ export abstract class Room extends PIXI.TilingSprite {
         return button;
     }
     //表示専用のアイテムを作成する
-    static makeDisplayItem(x: number, y: number, id: number, parent: TextWindow, intaractive: boolean) {
+    static makeDisplayItem(x: number, y: number, id: number, parent: PIXI.Sprite, intaractive: boolean) {
         let item = new Item(x, y, id, 1, 'display');
         if (intaractive) {
             item.interactive = true;

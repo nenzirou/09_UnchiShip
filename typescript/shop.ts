@@ -88,10 +88,18 @@ export class Shop extends PIXI.Sprite {
         this.sellingProductMoneyText = sellingProductMoneyText;
         //商品リストを上下させるボタン
         const upButton = new Button("↑", 175, 32, 0, 455, 0, 0x333333, 24, 1, true);
-        upButton.on("pointertap", () => { this.sellingProductFirstId--; if (this.sellingProductFirstId <= 0) this.sellingProductFirstId = 1; this.setSellingProduct(this.sellingProductFirstId); });
+        upButton.on("pointertap", () => {
+            this.sellingProductFirstId--;
+            if (this.sellingProductFirstId <= 0) this.sellingProductFirstId = 1;
+            this.setSellingProduct(this.sellingProductFirstId);
+        });
         this.sellingWindow.addChild(upButton);
         const downButton = new Button("↓", 175, 32, 185, 455, 0, 0x333333, 24, 1, true);
-        downButton.on("pointertap", () => { this.sellingProductFirstId++; if (this.sellingProductFirstId >= 5) this.sellingProductFirstId = 5; this.setSellingProduct(this.sellingProductFirstId); });
+        downButton.on("pointertap", () => {
+            this.sellingProductFirstId++;
+            if (this.sellingProductFirstId >= Item.itemInfo.length - this.sellingMax) this.sellingProductFirstId = Item.itemInfo.length - this.sellingMax;
+            this.setSellingProduct(this.sellingProductFirstId);
+        });
         this.sellingWindow.addChild(downButton);
         for (let i = 0; i < this.sellingMax; i++) {
             //商品のアイコン

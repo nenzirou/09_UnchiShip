@@ -19,6 +19,7 @@ import { Quest } from "./quest";
 import { Bar } from "./bar";
 import { Map } from "./map";
 import { BuildRoom } from "./buildRoom";
+import { Stage } from "./stage";
 /*
 shipに持たせる機能
 船の全体像
@@ -58,6 +59,7 @@ export class Ship extends PIXI.Container {
     calText: MyText;//総カロリー表示テキスト
     scaleUpButton: Button;//拡大を行うボタン
     scaleDownButton: Button;//縮小を行うボタン
+    goalScale: number;//目標の大きさを保持する
     stopButton: Button;//時間停止ボタン
     shopButton: Button;//店ボタン
     barButton: Button;//バーボタン
@@ -130,27 +132,30 @@ export class Ship extends PIXI.Container {
         this.menu.position.set(0, this.h);
         gamescene.addChild(this.menu);
         //表示テキスト
-        this.fuelText = new MyText("FUEL", 0, 0, 0, 20, 25, 0x333333);
+        this.fuelText = new MyText("FUEL", 0, 0, 0, 15, 25, 0x333333);
         this.menu.addChild(this.fuelText);
-        this.ojiText = new MyText("OJIs", 0, 25, 0, 20, 25, 0x333333);
+        this.ojiText = new MyText("OJIs", 7,16, 0, 15, 25, 0x333333);
         this.menu.addChild(this.ojiText);
-        this.calText = new MyText("CAL", 150, 25, 0, 20, 25, 0x333333);
+        this.calText = new MyText("CAL", 8, 32, 0, 15, 25, 0x333333);
         this.menu.addChild(this.calText);
         //拡大縮小ボタン
         this.scaleUpButton = new Button("拡大", 50, 50, this.w - 100, 50, 5, 0xff0000, 24, 1, true);
         this.scaleDownButton = new Button("縮小", 50, 50, this.w - 50, 50, 5, 0x0000ff, 24, 1, true);
+        this.goalScale = 1.0;
         this.scaleUpButton.on('pointertap', () => {
-            let scale = this.scale.x + 0.25;
+            const scale = this.goalScale + 0.25;
             if (scale <= 1.0) {
-                this.scale.set(scale);
-                this.position.set((1 - scale) * 200, (1 - scale) * 250);
+                this.goalScale += 0.25;
+                gsap.core.Tween.to(this.scale, { duration: 0.3, x: scale, y: scale })
+                gsap.core.Tween.to(this.position, { duration: 0.3, x: (1 - scale) * 200, y: (1 - scale) * 250 });
             }
         });
         this.scaleDownButton.on('pointertap', () => {
-            let scale = this.scale.x - 0.25;
+            const scale = this.goalScale - 0.25;
             if (scale >= 0.25) {
-                this.scale.set(scale);
-                this.position.set((1 - scale) * 200, (1 - scale) * 250);
+                this.goalScale -= 0.25;
+                gsap.core.Tween.to(this.scale, { duration: 0.3, x: scale, y: scale })
+                gsap.core.Tween.to(this.position, { duration: 0.3, x: (1 - scale) * 200, y: (1 - scale) * 250 });
             }
         });
         this.menu.addChild(this.scaleUpButton);
@@ -163,35 +168,50 @@ export class Ship extends PIXI.Container {
         this.menu.addChild(this.stopButton);
         //店作成
         this.shop = new Shop(this);
+        this.shop.setBuyingProduct(Stage.stageInfo[this.stageID].sellList);
         this.shop.visible = false;
         gamescene.addChild(this.shop);
         //店ボタン
         this.shopButton = new Button("お店", 62, 50, 0, 50, 5, 0x00ff00, 24, 1, true);
         this.shopButton.on('pointertap', () => {
-            PIXI.Loader.shared.resources.shopButton.sound.play();
-            this.shop.visible = true;
+            if (!this.going) {
+                PIXI.Loader.shared.resources.shopButton.sound.play();
+                this.shop.visible = true;
+            } else {
+                PIXI.Loader.shared.resources.nSelect.sound.play();
+            }
         });
         this.menu.addChild(this.shopButton);
         //クエスト一覧生成
         this.quest = new Quest(this);
+        this.quest.setQuestList(Stage.stageInfo[this.stageID].questList);
         this.quest.visible = false;
         gamescene.addChild(this.quest);
         //クエストボタン
         this.questButton = new Button("依頼", 62, 50, 62, 50, 5, 0xff00ff, 24, 1, true);
         this.questButton.on('pointertap', () => {
-            PIXI.Loader.shared.resources.questButton.sound.play();
-            this.quest.visible = true;
+            if (!this.going) {
+                PIXI.Loader.shared.resources.questButton.sound.play();
+                this.quest.visible = true;
+            } else {
+                PIXI.Loader.shared.resources.nSelect.sound.play();
+            }
         });
         this.menu.addChild(this.questButton);
         //バー一覧生成
         this.bar = new Bar(this);
+        this.bar.setTalkList(Stage.stageInfo[this.stageID].barList);
         this.bar.visible = false;
         gamescene.addChild(this.bar);
         //バーボタン
         this.barButton = new Button("酒場", 62, 50, 124, 50, 5, 0xffff33, 24, 1, true);
         this.barButton.on('pointertap', () => {
-            PIXI.Loader.shared.resources.barButton.sound.play();
-            this.bar.visible = true;
+            if (!this.going) {
+                PIXI.Loader.shared.resources.barButton.sound.play();
+                this.bar.visible = true;
+            } else {
+                PIXI.Loader.shared.resources.nSelect.sound.play();
+            }
         });
         this.menu.addChild(this.barButton);
         //マップ作製
@@ -290,7 +310,7 @@ export class Ship extends PIXI.Container {
                 if (this.cnt % 20 == 0 && this.makableItem) {
                     Ship.makeItem(this, this.w + 25, -800, Math.floor(Math.random() * 2) + 1, 1, 'out');
                 }
-                if (this.cnt % 100 == 0) {
+                if (this.cnt % 1 == 0) {
                     this.mapPosition++;
                     this.fuel--;
                     if (this.goalPosition == this.mapPosition) {
