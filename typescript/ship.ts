@@ -20,6 +20,7 @@ import { Bar } from "./bar";
 import { Map } from "./map";
 import { BuildRoom } from "./buildRoom";
 import { Stage } from "./stage";
+import { simpleWindow } from "./simpleWindow";
 /*
 shipに持たせる機能
 船の全体像
@@ -57,6 +58,8 @@ export class Ship extends PIXI.Container {
     fuelText: MyText;//燃料表示テキスト
     ojiText: MyText;//おじさん人数表示テキスト
     calText: MyText;//総カロリー表示テキスト
+    distanceDisplay: simpleWindow;//距離を表示する
+    distanceCursor: PIXI.Sprite;//距離を表示するカーソル
     scaleUpButton: Button;//拡大を行うボタン
     scaleDownButton: Button;//縮小を行うボタン
     goalScale: number;//目標の大きさを保持する
@@ -134,10 +137,15 @@ export class Ship extends PIXI.Container {
         //表示テキスト
         this.fuelText = new MyText("FUEL", 0, 0, 0, 15, 25, 0x333333);
         this.menu.addChild(this.fuelText);
-        this.ojiText = new MyText("OJIs", 7,16, 0, 15, 25, 0x333333);
+        this.ojiText = new MyText("OJIs", 7, 16, 0, 15, 25, 0x333333);
         this.menu.addChild(this.ojiText);
         this.calText = new MyText("CAL", 8, 32, 0, 15, 25, 0x333333);
         this.menu.addChild(this.calText);
+        this.distanceDisplay = new simpleWindow(150, 20, 148, 2, 5, 0x333377, 1, true);
+        this.menu.addChild(this.distanceDisplay);
+        this.distanceCursor = new PIXI.Sprite(PIXI.Loader.shared.resources.cursor2.texture);
+        this.distanceCursor.scale.set(0.6);
+        this.distanceDisplay.addChild(this.distanceCursor);
         //拡大縮小ボタン
         this.scaleUpButton = new Button("拡大", 50, 50, this.w - 100, 50, 5, 0xff0000, 24, 1, true);
         this.scaleDownButton = new Button("縮小", 50, 50, this.w - 50, 50, 5, 0x0000ff, 24, 1, true);
@@ -272,6 +280,7 @@ export class Ship extends PIXI.Container {
             this.fuelText.setText("FUEL:" + this.fuel + "/" + this.maxFuel);
             this.ojiText.setText("OJIs:" + this.ojis.length);
             this.calText.setText("CAL:" + 0);
+            this.distanceCursor.position.set(this.mapPosition / this.goalPosition * 130, 0);
             //お店の動作を行う
             this.shop.display(this);
             //クエストの動作を行う
@@ -310,7 +319,7 @@ export class Ship extends PIXI.Container {
                 if (this.cnt % 20 == 0 && this.makableItem) {
                     Ship.makeItem(this, this.w + 25, -800, Math.floor(Math.random() * 2) + 1, 1, 'out');
                 }
-                if (this.cnt % 1 == 0) {
+                if (this.cnt % 30 == 0) {
                     this.mapPosition++;
                     this.fuel--;
                     if (this.goalPosition == this.mapPosition) {

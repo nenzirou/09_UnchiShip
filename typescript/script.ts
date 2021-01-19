@@ -1,7 +1,8 @@
 import * as PIXI from "pixi.js"; // node_modulesから PIXI.jsをインポート
 import * as PIXI_SOUND from "pixi-sound";// node_modulesから PIXI_SOUNDをインポート
 import { SceneManager } from "./scene_manager"; // シーン管理を行うクラスをインポート
-import { Ship } from "./ship"; // ボタン生成関数をインポート
+import { Ship } from "./ship";
+import { GameEvent } from "./gameEvent";
 
 // PIXI_SOUNDを有効にするためには必ずこの初期化命令を実行すること
 PIXI_SOUND.default.init();
@@ -26,7 +27,9 @@ app.renderer.view.autofocus = true;
 app.renderer.backgroundColor = 0x000033;
 // ゲームで使用する画像をあらかじめ読み込んでおく(プリロードという)
 // v5.3.2　だと PIXI.Loader.shared.addでプリロードする
-const sound = { bgm1: "sound/bgm1.mp3", open: "sound/open.mp3", close: "sound/close.mp3", nSelect: "sound/nSelect.mp3", shop: "sound/shop.mp3", shopButton: "sound/shopButton.mp3", questButton: "sound/questButton.mp3", barButton: "sound/barButton.mp3", mapButton: "sound/mapButton.mp3", building: "sound/building.mp3", complete: "sound/complete.mp3", letsGo: "sound/letsGo.mp3" };
+const sound = {
+    bgm1: "sound/bgm1.mp3", open: "sound/open.mp3", close: "sound/close.mp3", nSelect: "sound/nSelect.mp3", shop: "sound/shop.mp3", shopButton: "sound/shopButton.mp3", questButton: "sound/questButton.mp3", barButton: "sound/barButton.mp3", mapButton: "sound/mapButton.mp3", building: "sound/building.mp3", complete: "sound/complete.mp3", letsGo: "sound/letsGo.mp3", message: "sound/message.mp3"
+};
 const image = {
     oji: "image/oji.png", window: "image/window.png", cursor: "image/cursor.png", cursor2: "image/cursor2.png", item: "image/item.png", room_building: "image/room_building.png", room_warehouse: "image/box.png", room_wall: "image/room_wall.png", room_work: "image/desk.png", room_aisle: "image/room_aisle.png", room_bed: "image/room_bed.png", rocket: "image/rocket.png", map: "image/map.png", menu: "image/menu.jpg", ship: "image/ship.png"
 };
@@ -56,6 +59,7 @@ PIXI.Loader.shared.load((loader, resources) => {
         app.stage.addChild(gameScene);
         const ship = new Ship(0, 0, 400, 500, gameScene);
         gameScene.addChild(ship);
+        const event = new GameEvent(gameScene);
 
         // const text = new PIXI.Text("SCORE:0", textStyle); //スコア表示テキスト
         // gameScene.addChild(text); // スコア表示テキストを画面に追加する
@@ -69,6 +73,7 @@ PIXI.Loader.shared.load((loader, resources) => {
 
         function gameLoop() // 毎フレームごとに処理するゲームループの関数
         {
+            event.act(ship, gameScene);
             ship.move(app);
         }
         // ゲームループ関数を毎フレーム処理の関数として追加

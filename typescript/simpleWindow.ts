@@ -4,7 +4,6 @@ import { MyText } from "./myText";
 ウィンドウ
 */
 export class simpleWindow extends PIXI.Graphics {
-    text: MyText;//ウィンドウ内テキスト
     constructor(width: number, height: number, x: number, y: number, z: number,color:number, alpha: number, visible: boolean) {
         super();
         this.beginFill(color, alpha); // 色、透明度を指定して描画開始

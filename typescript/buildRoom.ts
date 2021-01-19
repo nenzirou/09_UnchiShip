@@ -27,14 +27,23 @@ export class BuildRoom extends PIXI.Sprite {
         this.clickPosition = new PIXI.Point(0, 0);//クリック座標を初期化
         //クリックされたときの処理
         ship.on('pointertap', (e: PIXI.InteractionEvent) => {
-            const position = e.data.getLocalPosition(this);
+            const position = e.data.getLocalPosition(ship);
             position.set(Math.floor(position.x / 50) * 50, Math.floor(position.y / 50) * 50);
             if (this.clickPosition.x == position.x && this.clickPosition.y == position.y) {
-                if (ship.rooms[Math.floor(position.y / 50) * ship.rW + Math.floor(position.x / 50)].id == 1) {
-                    this.selected = true;
-                } else {
-                    PIXI.Loader.shared.resources.nSelect.sound.play();
-                    ship.gamescene.addChild(Button.makeSpeech("通路にしか部屋は立てられません。", 0x333333, 1.5, 400, 25, 0, 200, 5, 25, 0.9));
+                if (this.makingRoomId != 1) {//部屋作成
+                    if (ship.rooms[Math.floor(position.y / 50) * ship.rW + Math.floor(position.x / 50)].id == 1) {
+                        this.selected = true;
+                    } else {
+                        PIXI.Loader.shared.resources.nSelect.sound.play();
+                        ship.gamescene.addChild(Button.makeSpeech("通路にしか部屋は立てられません。", 0x333333, 1.5, 400, 25, 0, 200, 5, 25, 0.9));
+                    }
+                } else {//部屋破壊
+                    if (ship.rooms[Math.floor(position.y / 50) * ship.rW + Math.floor(position.x / 50)].id != 0) {
+                        this.selected = true;
+                    } else {
+                        PIXI.Loader.shared.resources.nSelect.sound.play();
+                        ship.gamescene.addChild(Button.makeSpeech("壁は破壊できません。", 0x333333, 1.5, 400, 25, 0, 200, 5, 25, 0.9));
+                    }
                 }
             } else {
                 this.clickPosition = position;
@@ -58,13 +67,13 @@ export class BuildRoom extends PIXI.Sprite {
         ship.gamescene.addChild(this.makingRoomOneLayerWindow);//ルーム作成第1ウィンドウを登録
         //第1層ウィンドウ内のテキスト設定
         this.makingRoomOneLayerWindow.setText('作成する部屋を選択');
-        let roomNameText = new MyText("", 80, 70, 1, 32, 50, 0x333333);
+        let roomNameText = new MyText("", 80, 70, 1, 26, 50, 0x333333);
         this.makingRoomOneLayerWindow.addChild(roomNameText);
-        roomNameText.setText('倉庫\nベッド\n作業場\n倉庫\nベッド\n作業場\n倉庫\nベッド\n作業場\n倉庫\n');
+        roomNameText.setText('部屋破壊\n倉庫\nベッド\n作業場');
         //作成アイテムアイコンの挙動
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 4; i++) {
             //第１層ウィンドウに配置するルームアイコン
-            const displayRoom: PIXI.TilingSprite = new PIXI.TilingSprite(PIXI.Loader.shared.resources[Room.roomInfo[i + 2].texture].texture, 50, 50);
+            const displayRoom: PIXI.TilingSprite = new PIXI.TilingSprite(PIXI.Loader.shared.resources[Room.roomInfo[i + 1].texture].texture, 50, 50);
             displayRoom.position.set(20 + Math.floor(i / 10) * 180, 50 * (i % 10) + 64);
             displayRoom.interactive = true;
             displayRoom.buttonMode = true;
@@ -74,7 +83,7 @@ export class BuildRoom extends PIXI.Sprite {
             const itemWindow: TextWindow = new TextWindow(0, 0, 1, 1, 1, 1, false);
             this.makingRoomOneLayerWindow.addChild(itemWindow);
             this.makingRoomTwoLayerWindows.push(itemWindow);
-            const itemlist: itemList[] = Room.roomInfo[i + 2].need;//itemList[]型がくる
+            const itemlist: itemList[] = Room.roomInfo[i + 1].need;//itemList[]型がくる
             //第2層アイテムの設定
             for (let j = 0; j < itemlist.length; j++) {
                 this.makingRoomTwoLayerItems.push(Room.makeDisplayItem(32 + 16, (j + 2) * 32 + 16, itemlist[j].id, this.makingRoomTwoLayerWindows[i], true));
@@ -94,14 +103,14 @@ export class BuildRoom extends PIXI.Sprite {
                 //ウィンドウを閉じる処理
                 this.makingRoomOneLayerWindow.visible = false;
                 Room.changeVisual(this.makingRoomTwoLayerWindows, false);
-                ship.gamescene.addChild(Button.makeSpeech("部屋を立てる場所を選んでください。", 0x333333, 5, 400, 32, 0, 200, 1, 22, 0.8));
+                ship.gamescene.addChild(Button.makeSpeech("部屋を立てる場所を選んでください。", 0x333333, 2, 400, 32, 0, 200, 1, 22, 0.8));
                 //選ぶ処理
                 for (let j = 0; j < ship.rooms.length; j++) {//全ての部屋をタッチできなくする
                     ship.rooms[j].interactive = false;
                 }
                 ship.interactive = true;//船をタッチできるようにする
                 this.clickCursor.visible = true;//カーソル表示
-                this.makingRoomId = i + 2;//作る部屋IDを保存
+                this.makingRoomId = i + 1;//作る部屋IDを保存
             });
             this.makingRoomTwoLayerWindows[i].addChild(makingButton);
         }
@@ -124,7 +133,7 @@ export class BuildRoom extends PIXI.Sprite {
             //テキスト更新
             for (let i = 0; i < this.makingRoomTwoLayerWindows.length; i++) {//第2層テキスト更新
                 if (this.makingRoomTwoLayerWindows[i].visible) {
-                    const itemlist: itemList[] = Room.roomInfo[i + 2].need;//itemList[]型がくる
+                    const itemlist: itemList[] = Room.roomInfo[i + 1].need;//itemList[]型がくる
                     //必要素材の必要数を表示するテキストを設定
                     let needItemText = "必要素材\n";
                     for (let j = 0; j < itemlist.length; j++) {

@@ -25,7 +25,7 @@ export class Quest extends PIXI.Sprite {
             name: "村の長",
             detail: "ケツにねじ込むためのネジが最近\n不足しているんじゃ。\nどこかにいいネジは無いものか…\nどこかにいいネジは無いものか…\nどこかにいいネジは無いものか…\nどこかにいいネジは無いものか…",
             needItemList: { id: 1, num: 3 },
-            rewordItemList: [{ id: 10, num: 3 }, { id: 12, num: 2 }, { id: 13, num: 1 }]
+            rewordItemList: [{ id: 200, num: 300 }, { id: 12, num: 2 }, { id: 13, num: 1 }]
         }, {
             title: "ケツ用のドライバー不足",
             name: "村の長",
