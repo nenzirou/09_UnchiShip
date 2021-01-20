@@ -8,21 +8,26 @@ export class eventWindow extends simpleWindow {
     wordCnt: number;
     text: string;
     displayText: MyText;
+    sencho: PIXI.Sprite;
     constructor() {
         super(400, 600, 0, 0, 101, 0x333333, 0.9, false);
-        this.displayText = new MyText("", 0, 0, 0, 25, 25, 0xdddddd);
-        this.displayText.style.wordWrapWidth = 400;
+        this.displayText = new MyText("", 10, 200, 0, 23, 25, 0xdddddd);
+        this.displayText.style.wordWrapWidth = 380;
         this.addChild(this.displayText);
-        this.interactive = true;
+        this.on("pointertap", () => {
+            if (this.mode == 1) this.mode = 2;
+        });
+        this.sencho = new PIXI.Sprite(PIXI.Loader.shared.resources.sencho.texture);
+        this.addChild(this.sencho);
+        this.initialize();
     }
     display() {
         if (this.mode == 0) {
-            if (this.cnt % 15 == 0) {
+            if (this.cnt % 1 == 0) {
                 this.wordCnt++;
             }
             const text = this.text.substr(0, this.wordCnt);
-            if (this.cnt % 15 == 0) {
-                console.log(text.substr(-1));
+            if (this.cnt % 1 == 0) {
                 if (text.substr(-1).match(/\n/)) {
                 } else {
                     PIXI.Loader.shared.resources.message.sound.play();
@@ -32,11 +37,6 @@ export class eventWindow extends simpleWindow {
             if (text.length == this.text.length) {
                 this.mode = 1;
             }
-        } else if (this.mode == 1) {
-            this.on("pointertap", () => {
-                this.visible = false;
-                this.mode = 2;
-            });
         }
         this.cnt++;
     }
@@ -44,6 +44,9 @@ export class eventWindow extends simpleWindow {
         this.cnt = 0;
         this.wordCnt = 0;
         this.mode = 0;
+        this.text = "";
+        this.displayText.y = 200;
+        this.sencho.visible = false;
     }
     setText(text: string) {
         this.text = text;

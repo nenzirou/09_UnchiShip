@@ -31,7 +31,7 @@ const sound = {
     bgm1: "sound/bgm1.mp3", open: "sound/open.mp3", close: "sound/close.mp3", nSelect: "sound/nSelect.mp3", shop: "sound/shop.mp3", shopButton: "sound/shopButton.mp3", questButton: "sound/questButton.mp3", barButton: "sound/barButton.mp3", mapButton: "sound/mapButton.mp3", building: "sound/building.mp3", complete: "sound/complete.mp3", letsGo: "sound/letsGo.mp3", message: "sound/message.mp3"
 };
 const image = {
-    oji: "image/oji.png", window: "image/window.png", cursor: "image/cursor.png", cursor2: "image/cursor2.png", item: "image/item.png", room_building: "image/room_building.png", room_warehouse: "image/box.png", room_wall: "image/room_wall.png", room_work: "image/desk.png", room_aisle: "image/room_aisle.png", room_bed: "image/room_bed.png", rocket: "image/rocket.png", map: "image/map.png", menu: "image/menu.jpg", ship: "image/ship.png"
+    oji: "image/oji.png", window: "image/window.png", cursor: "image/cursor.png", cursor2: "image/cursor2.png", item: "image/item.png", room_building: "image/room_building.png", room_warehouse: "image/box.png", room_wall: "image/room_wall.png", room_work: "image/desk.png", room_aisle: "image/room_aisle.png", room_bed: "image/room_bed.png", room_engine: "image/room_engine.png", rocket: "image/rocket.png", map: "image/map.png", menu: "image/menu.jpg", ship: "image/ship.png", sencho: "image/sencho.png"
 };
 Object.keys(sound).forEach(key => PIXI.Loader.shared.add(key, sound[key]));
 Object.keys(image).forEach(key => PIXI.Loader.shared.add(key, image[key]));

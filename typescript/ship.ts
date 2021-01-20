@@ -7,6 +7,7 @@ import { Room_aisle } from "./room_aisle";
 import { Room_warehouse } from "./room_warehouse";
 import { Room_work } from "./room_work";
 import { Room_bed } from "./room_bed";
+import { Room_engine } from "./room_engine";
 import { Ojisan } from "./ojisan";
 import { Item } from "./item";
 import { stringInOut } from "./item";
@@ -30,6 +31,7 @@ componentsに各部屋のクラスを保存する
 export class Ship extends PIXI.Container {
     //デバッグ用変数
     makableItem: boolean = true;//アイテムを生成するかどうか決定
+    ojiNum: number = 100;//おじさんの初期生成数
 
     eventFlags: boolean[] = new Array(200);//イベントフラグ
     gamescene: PIXI.Container;
@@ -55,6 +57,7 @@ export class Ship extends PIXI.Container {
     h: number;
     //メニューバー関係の変数
     menu: PIXI.Sprite;//メニューバー
+    menuHider: simpleWindow;//メニューバーを隠す
     fuelText: MyText;//燃料表示テキスト
     ojiText: MyText;//おじさん人数表示テキスト
     calText: MyText;//総カロリー表示テキスト
@@ -133,7 +136,11 @@ export class Ship extends PIXI.Container {
         //メニューバー
         this.menu = new PIXI.Sprite(PIXI.Loader.shared.resources.menu.texture);
         this.menu.position.set(0, this.h);
+        this.menu.sortableChildren = true;
         gamescene.addChild(this.menu);
+        this.menuHider = new simpleWindow(400, 100, 0, 0, 100, 0x333333, 0.8, false);
+        this.menuHider.interactive = true;
+        this.menu.addChild(this.menuHider);
         //表示テキスト
         this.fuelText = new MyText("FUEL", 0, 0, 0, 15, 25, 0x333333);
         this.menu.addChild(this.fuelText);
@@ -251,7 +258,7 @@ export class Ship extends PIXI.Container {
             }
         }
         // おじさん生成
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < this.ojiNum; i++) {
             let oji = new Ojisan(Math.random() * width, Math.random() * height);
             this.addChild(oji);
             this.ojis.push(oji);
@@ -374,6 +381,9 @@ export class Ship extends PIXI.Container {
             }
             case 4: {
                 room = new Room_work(x, y, gamescene, state); break;
+            }
+            case 5: {
+                room = new Room_engine(x, y, gamescene, state); break;
             }
         }
         return room;

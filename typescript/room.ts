@@ -41,12 +41,12 @@ export abstract class Room extends PIXI.TilingSprite {
             texture: "room_aisle"
         }, {
             name: '倉庫',
-            need: [{ id: 1, num: 1 }],
+            need: [{ id: 7, num: 3 },{ id: 8, num: 2 }],
             time: 0,
             texture: "room_warehouse"
         }, {
             name: 'ベッド',
-            need: [{ id: 1, num: 1 }],
+            need: [{ id: 16, num: 1 },{ id: 17, num: 1 }],
             time: 0,
             texture: "room_bed"
         }, {
@@ -55,10 +55,10 @@ export abstract class Room extends PIXI.TilingSprite {
             time: 0,
             texture: "room_work"
         }, {
-            name: '壁',
-            need: [],
+            name: 'エンジン',
+            need: [{ id: 18, num: 1 },{ id: 19, num: 1 }],
             time: 0,
-            texture: ""
+            texture: "room_engine"
         }
     ];
     oneLayerWindow: TextWindow;//第１層ウィンドウ

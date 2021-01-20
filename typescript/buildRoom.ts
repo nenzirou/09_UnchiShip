@@ -69,9 +69,9 @@ export class BuildRoom extends PIXI.Sprite {
         this.makingRoomOneLayerWindow.setText('作成する部屋を選択');
         let roomNameText = new MyText("", 80, 70, 1, 26, 50, 0x333333);
         this.makingRoomOneLayerWindow.addChild(roomNameText);
-        roomNameText.setText('部屋破壊\n倉庫\nベッド\n作業場');
+        roomNameText.setText('部屋破壊\n倉庫\nベッド\n作業場\nエンジン');
         //作成アイテムアイコンの挙動
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 5; i++) {
             //第１層ウィンドウに配置するルームアイコン
             const displayRoom: PIXI.TilingSprite = new PIXI.TilingSprite(PIXI.Loader.shared.resources[Room.roomInfo[i + 1].texture].texture, 50, 50);
             displayRoom.position.set(20 + Math.floor(i / 10) * 180, 50 * (i % 10) + 64);
