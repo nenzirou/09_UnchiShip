@@ -5,11 +5,11 @@ import { Room } from "./room";
 import { simpleWindow } from "./simpleWindow";
 import { MyText } from "./myText";
 import { Item } from "./item";
+import { BackWindow } from "./backWindow";
 /*
 店
 */
-export class Shop extends PIXI.Sprite {
-    backButton: Button;//戻るボタン
+export class Shop extends BackWindow {
     moneyText: MyText;//お金表示
     //購入タブ
     buyingMax: number = 10;//購入商品の最大種類
@@ -32,12 +32,9 @@ export class Shop extends PIXI.Sprite {
     sellingProductSum: number[] = [];//売れる商品の所持数
     sellingProductFirstId: number;//売る商品リストの最初のID
     constructor(ship: Ship) {
-        super(PIXI.Loader.shared.resources.window.texture);
+        super(0,0,1,1,1,1,false);
         this.interactive = true;
-        this.zIndex = 100;//最前面表示
         this.alpha = 0.8;
-        //戻るボタン作成
-        this.backButton = Room.makeBackButton(0, 0, this);
         //所持金表示テキスト作成
         this.moneyText = new MyText("", 100, 5, 0, 20, 32, 0xdddd33);
         this.addChild(this.moneyText);

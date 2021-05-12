@@ -7,6 +7,8 @@ import { Ship } from "./ship";
 export class Room_aisle extends Room {
     constructor(x: number, y: number, gamescene: PIXI.Container, state) {
         super(1, x, y, PIXI.Loader.shared.resources.room_aisle.texture, gamescene, state);
+        this.buttonMode = false;
+        this.interactive = false;
     }
     move(ship: Ship) {
         this.buildRoom(ship);//部屋を立ててくれる関数

@@ -1,11 +1,8 @@
 import * as PIXI from "pixi.js";
 import { Button } from "./button";
 import { Ship } from "./ship";
-import { itemList, Room } from "./room";
-import { simpleWindow } from "./simpleWindow";
 import { MyText } from "./myText";
-import { Item } from "./item";
-import { TextWindow } from "./window";
+import { BackWindow } from "./backWindow";
 interface barInfo {
     title: string;//話のタイトル
     name: string;//話者の名前
@@ -13,7 +10,7 @@ interface barInfo {
     money: number;//話を聞くのに必要なお金
     flag: number;//オンにするフラグナンバー
 }
-export class Bar extends PIXI.Sprite {
+export class Bar extends BackWindow {
     static barInfo: barInfo[] = [
         {
             title: "ケツの祖先の話",
@@ -42,38 +39,30 @@ export class Bar extends PIXI.Sprite {
         }
     ];
     talks: number[];//クエストリスト
-    backButton: Button;//戻るボタン
     moneyText: MyText;//お金表示
     max: number = 5;//話の最大数
-    oneLayerTitleText: MyText;//クエストタイトルテキスト
     oneLayerMoneyText: MyText;//お金テキスト
     oneLayerButtons: Button[] = [];//クエスト詳細ボタン
-    twoLayerWindows: TextWindow[] = [];//第２層のウィンドウ
+    twoLayerWindows: BackWindow[] = [];//第２層のウィンドウ
     twoLayerNameTexts: MyText[] = [];//依頼者の名前を入れるテキスト
     twoLayerFlavorTexts: MyText[] = [];//依頼のフレーバーテキスト
     constructor(ship: Ship) {
-        super(PIXI.Loader.shared.resources.window.texture);
+        super(0,0,1,1,1,1,false);
         this.interactive = true;
         this.sortableChildren = true;
         this.zIndex = 100;//最前面表示
         this.alpha = 1;
-        //戻るボタン作成
-        this.backButton = Room.makeBackButton(0, 0, this);
         //所持金表示テキスト作成
         this.moneyText = new MyText("", 160, 5, 0, 20, 32, 0xdddd33);
         this.addChild(this.moneyText);
         //「クエスト一覧」テキスト作成
         this.addChild(new MyText("小話一覧", 50, 0, 1, 24, 32, 0x333333));
-        //クエストタイトルテキスト作成
-        this.oneLayerTitleText = new MyText("", 20, 37, 1, 24, 35, 0x333333);
-        this.addChild(this.oneLayerTitleText);
         //お金表示テキスト作成
         this.oneLayerMoneyText = new MyText("", 20, 37, 1, 24, 35, 0xffff33);
         this.addChild(this.oneLayerMoneyText);
         for (let i = 0; i < this.max; i++) {
             //入れ子ウィンドウ
-            const twoLayerWindow = new TextWindow(0, 0, 5, 1, 1, 1, false);
-            Room.makeBackButton(50, 0, twoLayerWindow);//戻るボタン
+            const twoLayerWindow = new BackWindow(0, 0, 5, 1, 1, 1, false);
             this.addChild(twoLayerWindow);
             this.twoLayerWindows.push(twoLayerWindow);
             //依頼者の名前のテキスト
@@ -116,16 +105,20 @@ export class Bar extends PIXI.Sprite {
             this.oneLayerMoneyText.setText(text);
         }
     }
+    //小話リストを更新する
     setTalkList(talks: number[]) {
         this.talks = talks;
+        //詳細ボタンの表示非表示を切り替える
         for (let i = 0; i < this.max; i++) {
             if (i < this.talks.length) this.oneLayerButtons[i].visible = true;
             else this.oneLayerButtons[i].visible = false;
         }
-        let titleText = "";//タイトル一覧設定
+        //小話のタイトルを表示する
+        let titleText = "";
         for (let i = 0; i < this.talks.length; i++) {
             titleText += Bar.barInfo[this.talks[i]].title + "\n\n";
         }
-        this.oneLayerTitleText.setText(titleText);
+        if (this.talks.length == 0) titleText = "誰もいない。";
+        this.setContentText(titleText);
     }
 }

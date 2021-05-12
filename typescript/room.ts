@@ -1,10 +1,12 @@
 import * as PIXI from "pixi.js";
-import { TextWindow } from "./window";
+import { TextWindow } from "./textWindow";
 import { Ship } from "./ship";
 import { Ojisan } from "./ojisan";
 import { Item } from "./item";
 import { MyText } from "./myText";
 import { Button } from "./button";
+import { BackWindow } from "./backWindow";
+import { RoomWindow } from "./roomWindow";
 
 /*
 roomに持たせる機能
@@ -41,37 +43,34 @@ export abstract class Room extends PIXI.TilingSprite {
             texture: "room_aisle"
         }, {
             name: '倉庫',
-            need: [{ id: 7, num: 3 },{ id: 8, num: 2 }],
+            need: [{ id: 7, num: 3 }, { id: 8, num: 2 }],
             time: 0,
             texture: "room_warehouse"
         }, {
             name: 'ベッド',
-            need: [{ id: 16, num: 1 },{ id: 17, num: 1 }],
+            need: [{ id: 16, num: 1 }, { id: 17, num: 1 }],
             time: 0,
             texture: "room_bed"
         }, {
             name: '作業場',
-            need: [{ id: 1, num: 1 }],
+            need: [{ id: 6, num: 5 }],
             time: 0,
             texture: "room_work"
         }, {
             name: 'エンジン',
-            need: [{ id: 18, num: 1 },{ id: 19, num: 1 }],
+            need: [{ id: 18, num: 1 }, { id: 19, num: 1 }],
             time: 0,
             texture: "room_engine"
         }
     ];
-    oneLayerWindow: TextWindow;//第１層ウィンドウ
-    oneLayerBack: PIXI.Container;//第１層ウィンドウの戻るボタン
+    oneLayerWindow: RoomWindow;//第１層バックウィンドウ
     oneLayerItems: Item[] = [];//第１層のアイテムアイコン
-    stateText: MyText;//状態を表示するテキストウィンドウ
-    twoLayerWindows: TextWindow[] = [];//第２層のウィンドウ
-    twoLayerBacks: PIXI.Container[] = [];//第２層ウィンドウの戻るボタン
+    twoLayerWindows: BackWindow[] = [];//第２層のバックウィンドウ
     twoLayerItems: Item[] = [];//第２層のアイテムアイコン
     build: boolean;//建てられたかどうか
-    makingItem: number = 0;
-    makeCnt: number = 0;
-    loop: boolean = true;
+    makingItem: number = 0;//作っているアイテムのID
+    makeCnt: number = 0;//アイテムを作るときに使うカウント
+    loop: boolean = true;//アイテムをループで作るかどうか
     kind: number = 4;// 倉庫のアイテムを入れられる種類
     itemlist: itemList[] = [];//この部屋に格納されているアイテムリスト
     needItems: number[] = [];//欲しいものリスト
@@ -86,20 +85,25 @@ export abstract class Room extends PIXI.TilingSprite {
     ojiMax: number = 4;// おじさんを入れられる最大数
     constructor(id: number, x: number, y: number, texture: PIXI.Texture, gamescene: PIXI.Container, state: stringRoomState) {
         super(texture, 50, 50);
+        //部屋がクリックされたときの処理
+        this.on("pointerup", () => {
+            PIXI.Loader.shared.resources.open.sound.play();
+            this.oneLayerWindow.visible = true;
+        });
         this.defaultTexture = texture;
         this.state = state;
+        this.level = 1;
         if (this.state === 'build') this.build = false;
-        else {
-            this.build = true;
-        }
+        else this.build = true;
         this.id = id;//部屋のID
         this.anchor.set(0.5);//ローカル座標の始点を真ん中にする
         this.x = x;// 部屋のｘ座標
         this.y = y;// 部屋のｙ座標
         this.zIndex = -1;//部屋のｚ座標
-        this.oneLayerWindow = new TextWindow(0, 0, 1, 1, 1, 0.8, false);
-        this.oneLayerWindow.zIndex = 10;
-        gamescene.addChild(this.oneLayerWindow);
+        this.oneLayerWindow = new RoomWindow(0, 0, 1, 1, 1, 1, false);//ウィンドウ生成
+        this.oneLayerWindow.setTitleText(Room.roomInfo[id].name);//タイトルテキスト表示
+        this.oneLayerWindow.exWindow.setTitleText(Room.roomInfo[id].name + "拡張");//拡張タイトルテキスト表示
+        gamescene.addChild(this.oneLayerWindow);//ウィンドウを子にする
         this.interactive = true;
         this.buttonMode = true;
     }
@@ -192,16 +196,16 @@ export abstract class Room extends PIXI.TilingSprite {
                 .to(oji, { duration: Room.len(room.x, room.y, warehouse.x, warehouse.y) / oji.speed, x: room.x, y: room.y })//対称の部屋に向かう
         } else {//地面のアイテムを持ってくる場合
             oji.tl
-            .to(oji, { duration: Room.len(oji.x, oji.y, item.x, item.y) / oji.speed, x: item.x, y: item.y })//アイテムに向かう
+                .to(oji, { duration: Room.len(oji.x, oji.y, item.x, item.y) / oji.speed, x: item.x, y: item.y })//アイテムに向かう
                 .call(() => {//おじさんが倉庫からアイテムを取りだす処理
-                if(item.state==='reserved'){
-                    Room.stickItemToOji(oji, id);//アイテムをおじさんにくっつける
-                    item.state = 'garbage';//アイテムを破棄
-                } else {//おじさんがたどり着いた頃にはもう必要なアイテムはなかった場合
-                    Room.freeOji(oji);//おじさんを解放
-                }
-            })
-            .to(oji, { duration: Room.len(room.x, room.y, item.x, item.y) / oji.speed, x: room.x, y: room.y })//対称の部屋に向かう
+                    if (item.state === 'reserved') {
+                        Room.stickItemToOji(oji, id);//アイテムをおじさんにくっつける
+                        item.state = 'garbage';//アイテムを破棄
+                    } else {//おじさんがたどり着いた頃にはもう必要なアイテムはなかった場合
+                        Room.freeOji(oji);//おじさんを解放
+                    }
+                })
+                .to(oji, { duration: Room.len(room.x, room.y, item.x, item.y) / oji.speed, x: room.x, y: room.y })//対称の部屋に向かう
         }
         oji.tl.call(() => {//持ってきたアイテムを格納する処理
             let judge = false;
@@ -302,16 +306,6 @@ export abstract class Room extends PIXI.TilingSprite {
             }
         }
         return sum;
-    }
-    //戻るボタンを作成する
-    static makeBackButton(x: number, y: number, closeWindow: PIXI.Container) {
-        const button = new Button("戻る", 50, 30, x, y, 2, 0x555555, 20, 1, true);
-        button.on("pointerup", () => {
-            PIXI.Loader.shared.resources.close.sound.play();
-            closeWindow.visible = false;
-        });
-        closeWindow.addChild(button);
-        return button;
     }
     //表示専用のアイテムを作成する
     static makeDisplayItem(x: number, y: number, id: number, parent: PIXI.Sprite, intaractive: boolean) {

@@ -84,6 +84,8 @@ export class Item extends PIXI.TilingSprite {
     state: stringInOut = 'in';
     max: number = 99;
     tl: TimelineMax;
+    speed: number;
+    rotat: number;
     static size: number = 0.6;
     constructor(x: number, y: number, id: number, num: number, state: stringInOut) {
         super(PIXI.Loader.shared.resources.item.texture, 32, 32);
@@ -97,14 +99,18 @@ export class Item extends PIXI.TilingSprite {
         Item.changeItem(this, id);
         this.state = state;
         this.tl = gsap.timeline();
+        this.speed = Math.random() * 3 + 1;
+        this.rotat = -0.5 + Math.random() * 1;
     }
     move(ship: Ship) {
         if (this.state === 'out') {
-            this.y += 1;
+            this.y += this.speed;
+            this.rotation += this.rotat;
             if (this.y >= 250) {
                 this.state = 'reserved';
                 let x = this.x;
                 let y = this.y;
+                this.rotation = 0;
                 this.position.set(Math.floor(Math.random() * (ship.w - this.width)) + this.width / 2, Math.floor(Math.random() * (ship.h - this.height)) + this.height / 2);
                 this.tl.from(this, { duration: 1, x: x, y: y });
                 this.tl.from(this.scale, { duration: 0.2, x: 0.5, y: 0.5, ease: 'back.out(10)' });
@@ -128,9 +134,9 @@ export class Item extends PIXI.TilingSprite {
                             .call(this.putItem, [warehouse, this, oji, ship]);
                     }
                 }
-                if (this.cnt > 60 * 60) {
-                    this.state = 'garbage';
-                }
+                // if (this.cnt > 60 * 60) {
+                //     this.state = 'garbage';
+                // }
             }
             this.cnt++;
         } else if (this.state === 'transporting') {

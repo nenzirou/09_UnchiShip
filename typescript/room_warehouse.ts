@@ -13,17 +13,9 @@ export class Room_warehouse extends Room {
         super(2, x, y, PIXI.Loader.shared.resources.room_warehouse.texture, gamescene, state);
         this.x = x;// 部屋のｘ座標
         this.y = y;// 部屋のｙ座標
-        this.kind = 15;
-        this.on("pointerdown", () => {
-            PIXI.Loader.shared.resources.open.sound.play();
-            this.oneLayerWindow.visible = true;
-            this.tilePosition.x = 50;
-        });
-        this.oneLayerBack = Room.makeBackButton(0, 0, this.oneLayerWindow);
-        this.oneLayerBack.on("pointerdown", () => {
-            this.tilePosition.x = 0;
-        })
-        this.oneLayerWindow.text.position.set(64, 32);
+        this.kind = this.level*15;//収容種類
+        this.oneLayerWindow.contentText.position.set(64, 32);
+        //アイテムオブジェクトの配置
         for (let i = 0; i < 15; i++) {
             this.displayItems.push(new Item(32 + 16, (i + 1) * 32 + 16, 0, 1, 'display'));
             this.oneLayerWindow.addChild(this.displayItems[i]);
@@ -32,6 +24,7 @@ export class Room_warehouse extends Room {
     move(ship: Ship) {
         this.buildRoom(ship);//部屋を立ててくれる関数
         this.gatherNeedItem(ship);//必要なアイテムを自動で集めてくれる関数
+        //建設後の処理
         if (this.build) {
             if (this.oneLayerWindow.visible) {
                 let text: string = "";
@@ -49,9 +42,10 @@ export class Room_warehouse extends Room {
                         text += "空き\n";
                     }
                 }
-                this.oneLayerWindow.setText(text);
+                this.oneLayerWindow.setContentText(text);
             }
         }
+        //アイテムが無くなったときの処理
         for (let i = 0; i < this.itemlist.length; i++) {
             if (this.itemlist[i].num <= 0) {
                 this.itemlist.splice(i, 1);

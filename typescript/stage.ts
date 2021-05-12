@@ -16,7 +16,7 @@ export class Stage {
             questList: [],
             barList: [],
             linkList: [[1, 100]],
-            dropItemList: []
+            dropItemList: [[0, 0.5], [6, 0.45], [2, 0.05]]
         },
         {
             name: "油田の星",
@@ -24,14 +24,14 @@ export class Stage {
             questList: [1, 0],
             barList: [1, 0],
             linkList: [[0, 100], [2, 100]],
-            dropItemList: []
+            dropItemList: [[0, 0.5], [6, 0.4], [2, 0.1]]
         },
         {
             name: "機械の星",
             sellList: [[5, 50], [19, 25]],
             questList: [1, 0],
             barList: [1, 0],
-            linkList: [[1, 100], [3, 150],[4,150]],
+            linkList: [[1, 100], [3, 150], [4, 150]],
             dropItemList: []
         },
         {

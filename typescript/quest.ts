@@ -2,10 +2,10 @@ import * as PIXI from "pixi.js";
 import { Button } from "./button";
 import { Ship } from "./ship";
 import { itemList, Room } from "./room";
-import { simpleWindow } from "./simpleWindow";
+import { BackWindow } from "./backWindow";
 import { MyText } from "./myText";
 import { Item } from "./item";
-import { TextWindow } from "./window";
+import { TextWindow } from "./textWindow";
 /*
 クエスト
 形式　id、タイトルテキスト、依頼者、詳細テキスト、必要アイテム、報酬アイテム
@@ -18,7 +18,7 @@ interface questInfo {
     needItemList: itemList;//必要アイテム
     rewordItemList: itemList[];//報酬アイテム
 }
-export class Quest extends PIXI.Sprite {
+export class Quest extends BackWindow {
     static questInfo: questInfo[] = [
         {
             title: "ケツ用のネジ不足",
@@ -35,9 +35,7 @@ export class Quest extends PIXI.Sprite {
         },
     ];
     quests: number[];//クエストリスト
-    backButton: Button;//戻るボタン
     max: number = 10;//クエスト最大数
-    oneLayerTitleText: MyText;//クエストタイトルテキスト
     oneLayerButtons: Button[] = [];//クエスト詳細ボタン
     twoLayerWindows: TextWindow[] = [];//第２層のウィンドウ
     twoLayerNameTexts: MyText[] = [];//依頼者の名前を入れるテキスト
@@ -47,23 +45,15 @@ export class Quest extends PIXI.Sprite {
     twoLayerRewordItemIcons: Item[][] = [];//報酬アイテムのアイコン
     twoLayerRewordItemTexts: MyText[] = [];//報酬アイテムのテキスト
     constructor(ship: Ship) {
-        super(PIXI.Loader.shared.resources.window.texture);
+        super(0,0,1,1,1,1,false);
         for (let i = 0; i < this.max; i++)this.twoLayerRewordItemIcons.push(new Array(0));
         this.interactive = true;
         this.sortableChildren = true;
-        this.zIndex = 100;//最前面表示
-        this.alpha = 1;
-        //戻るボタン作成
-        this.backButton = Room.makeBackButton(0, 0, this);
         //「クエスト一覧」テキスト作成
         this.addChild(new MyText("クエスト一覧", 100, 0, 1, 32, 32, 0x333333));
-        //クエストタイトルテキスト作成
-        this.oneLayerTitleText = new MyText("", 20, 37, 1, 24, 35, 0x333333);
-        this.addChild(this.oneLayerTitleText);
         for (let i = 0; i < this.max; i++) {
             //入れ子ウィンドウ
-            const twoLayerWindow = new TextWindow(0, 0, 5, 1, 1, 1, false);
-            Room.makeBackButton(50, 0, twoLayerWindow);//戻るボタン
+            const twoLayerWindow = new BackWindow(0, 0, 5, 1, 1, 1, false);
             this.addChild(twoLayerWindow);
             this.twoLayerWindows.push(twoLayerWindow);
             //依頼者の名前のテキスト
@@ -153,17 +143,20 @@ export class Quest extends PIXI.Sprite {
             }
         }
     }
+    //指定したIDのクエストをセットする
     setQuestList(quests: number[]) {
         this.quests = quests;
+        //詳細ボタンの表示を切り替える
         for (let i = 0; i < this.max; i++) {
             if (i < this.quests.length) this.oneLayerButtons[i].visible = true;
             else this.oneLayerButtons[i].visible = false;
         }
-        let titleText = "";//タイトル一覧設定
+        //依頼のタイトルを表示する
+        let titleText = "";
         for (let i = 0; i < this.quests.length; i++) {
             titleText += Quest.questInfo[this.quests[i]].title + "\n";
         }
-        if (this.quests.length == 0) titleText = "今のところ依頼は無いようだ。";
-        this.oneLayerTitleText.setText(titleText);
+        if (this.quests.length == 0) titleText = "依頼は無いようだ。";
+        this.setContentText(titleText);
     }
 }

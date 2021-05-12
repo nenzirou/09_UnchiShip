@@ -13,7 +13,7 @@ import { Item } from "./item";
 import { stringInOut } from "./item";
 import { stringRoomState } from "./room";
 import { Button } from "./button";
-import { TextWindow } from "./window";
+import { TextWindow } from "./textWindow";
 import { MyText } from "./myText";
 import { Shop } from "./shop";
 import { Quest } from "./quest";
@@ -22,16 +22,17 @@ import { Map } from "./map";
 import { BuildRoom } from "./buildRoom";
 import { Stage } from "./stage";
 import { simpleWindow } from "./simpleWindow";
+import { starManager } from "./starManager";
 /*
 shipに持たせる機能
 船の全体像
-componentsに各部屋のクラスを保存する
 */
 
 export class Ship extends PIXI.Container {
     //デバッグ用変数
     makableItem: boolean = true;//アイテムを生成するかどうか決定
-    ojiNum: number = 100;//おじさんの初期生成数
+    ojiNum: number = 10;//おじさんの初期生成数
+    event: boolean = false;//イベントを発生させるかどうか
 
     eventFlags: boolean[] = new Array(200);//イベントフラグ
     gamescene: PIXI.Container;
@@ -55,6 +56,7 @@ export class Ship extends PIXI.Container {
     rH: number = 10;
     w: number;
     h: number;
+    starManager: starManager;//星を管理
     //メニューバー関係の変数
     menu: PIXI.Sprite;//メニューバー
     menuHider: simpleWindow;//メニューバーを隠す
@@ -87,8 +89,8 @@ export class Ship extends PIXI.Container {
         [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 0, 0],
-        [0, 0, 1, 1, 1, 1, 0, 0],
+        [0, 0, 2, 3, 4, 5, 0, 0],
+        [0, 0, 2, 2, 2, 2, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0],
@@ -123,33 +125,27 @@ export class Ship extends PIXI.Container {
         this.h = height;
         this.gamescene = gamescene;
         this.sortableChildren = true;
+        this.starManager = new starManager(gamescene);
         //ロケットの外観を作成
         this.rocket = new PIXI.TilingSprite(PIXI.Loader.shared.resources.rocket.texture, 700, 800);
         this.rocket.position.set(-150, -200);
         this.rocket.zIndex = 100;
         this.rocket.interactive = true;
         this.rocket.visible = false;
-        this.addChild(this.rocket);
         this.ship = new PIXI.TilingSprite(PIXI.Loader.shared.resources.ship.texture, 500, 600);
         this.ship.position.set(-50, -99);
-        this.addChild(this.ship);
+        this.addChild(this.rocket,this.ship);
         //メニューバー
         this.menu = new PIXI.Sprite(PIXI.Loader.shared.resources.menu.texture);
         this.menu.position.set(0, this.h);
         this.menu.sortableChildren = true;
-        gamescene.addChild(this.menu);
         this.menuHider = new simpleWindow(400, 100, 0, 0, 100, 0x333333, 0.8, false);
         this.menuHider.interactive = true;
-        this.menu.addChild(this.menuHider);
         //表示テキスト
         this.fuelText = new MyText("FUEL", 0, 0, 0, 15, 25, 0x333333);
-        this.menu.addChild(this.fuelText);
         this.ojiText = new MyText("OJIs", 7, 16, 0, 15, 25, 0x333333);
-        this.menu.addChild(this.ojiText);
         this.calText = new MyText("CAL", 8, 32, 0, 15, 25, 0x333333);
-        this.menu.addChild(this.calText);
         this.distanceDisplay = new simpleWindow(150, 20, 148, 2, 5, 0x333377, 1, true);
-        this.menu.addChild(this.distanceDisplay);
         this.distanceCursor = new PIXI.Sprite(PIXI.Loader.shared.resources.cursor2.texture);
         this.distanceCursor.scale.set(0.6);
         this.distanceDisplay.addChild(this.distanceCursor);
@@ -173,19 +169,16 @@ export class Ship extends PIXI.Container {
                 gsap.core.Tween.to(this.position, { duration: 0.3, x: (1 - scale) * 200, y: (1 - scale) * 250 });
             }
         });
-        this.menu.addChild(this.scaleUpButton);
-        this.menu.addChild(this.scaleDownButton);
         //時間停止ボタン
         this.stopButton = new Button("停止", 52, 50, this.w - 152, 50, 5, 0x333333, 24, 1, true);
         this.stopButton.on('pointertap', () => {
             this.stop = !this.stop;
         });
-        this.menu.addChild(this.stopButton);
+
         //店作成
         this.shop = new Shop(this);
         this.shop.setBuyingProduct(Stage.stageInfo[this.stageID].sellList);
         this.shop.visible = false;
-        gamescene.addChild(this.shop);
         //店ボタン
         this.shopButton = new Button("お店", 62, 50, 0, 50, 5, 0x00ff00, 24, 1, true);
         this.shopButton.on('pointertap', () => {
@@ -196,12 +189,10 @@ export class Ship extends PIXI.Container {
                 PIXI.Loader.shared.resources.nSelect.sound.play();
             }
         });
-        this.menu.addChild(this.shopButton);
         //クエスト一覧生成
         this.quest = new Quest(this);
         this.quest.setQuestList(Stage.stageInfo[this.stageID].questList);
         this.quest.visible = false;
-        gamescene.addChild(this.quest);
         //クエストボタン
         this.questButton = new Button("依頼", 62, 50, 62, 50, 5, 0xff00ff, 24, 1, true);
         this.questButton.on('pointertap', () => {
@@ -212,12 +203,10 @@ export class Ship extends PIXI.Container {
                 PIXI.Loader.shared.resources.nSelect.sound.play();
             }
         });
-        this.menu.addChild(this.questButton);
         //バー一覧生成
         this.bar = new Bar(this);
         this.bar.setTalkList(Stage.stageInfo[this.stageID].barList);
         this.bar.visible = false;
-        gamescene.addChild(this.bar);
         //バーボタン
         this.barButton = new Button("酒場", 62, 50, 124, 50, 5, 0xffff33, 24, 1, true);
         this.barButton.on('pointertap', () => {
@@ -228,27 +217,22 @@ export class Ship extends PIXI.Container {
                 PIXI.Loader.shared.resources.nSelect.sound.play();
             }
         });
-        this.menu.addChild(this.barButton);
         //マップ作製
         this.map = new Map(this);
-        gamescene.addChild(this.map);
         //マップボタン
         this.mapButton = new Button("地図", 62, 50, 186, 50, 5, 0xdddddd, 24, 1, true);
         this.mapButton.on('pointertap', () => {
             PIXI.Loader.shared.resources.mapButton.sound.play();
             this.map.visible = true;
         });
-        this.menu.addChild(this.mapButton);
         //ルーム作成
         this.buildRoom = new BuildRoom(this);
-        gamescene.addChild(this.buildRoom);
         //ルーム作成ボタン
         this.makingRoomButton = new Button("建設", 100, 50, this.w - 100, 0, 5, 0x000000, 24, 1, true);
         this.makingRoomButton.on('click', () => {//ルーム作成ボタンの挙動
             PIXI.Loader.shared.resources.open.sound.play();
-            this.buildRoom.makingRoomOneLayerWindow.visible = true;
+            this.buildRoom.visible = true;
         });
-        this.menu.addChild(this.makingRoomButton);
         // 船の部屋生成
         for (let i = 0; i < this.rH; i++) {
             for (let j = 0; j < this.rW; j++) {
@@ -263,6 +247,8 @@ export class Ship extends PIXI.Container {
             this.addChild(oji);
             this.ojis.push(oji);
         }
+        gamescene.addChild(this.menu,this.shop,this.quest,this.bar,this.map,this.buildRoom);
+        this.menu.addChild(this.menuHider, this.fuelText, this.ojiText, this.calText, this.distanceDisplay, this.scaleUpButton, this.scaleDownButton, this.stopButton, this.shopButton, this.questButton, this.barButton, this.mapButton, this.makingRoomButton);
     }
 
 
@@ -270,19 +256,11 @@ export class Ship extends PIXI.Container {
     move(app: PIXI.Application) {
         if (!this.stop) {
             //フリーなおじさんリストを作成する
-            this.freeOjis = [];
-            for (let i = 0; i < this.ojis.length; i++) {
-                if (this.ojis[i].state === 'free') {
-                    this.freeOjis.push(this.ojis[i]);
-                }
-            }
+            this.freeOjis = this.ojis.filter((v) => v.state === 'free');
             //倉庫リストを作成する
-            this.warehouses = [];
-            for (let i = 0; i < this.rooms.length; i++) {
-                if (this.rooms[i].id === 2 && this.rooms[i].state === 'free') {
-                    this.warehouses.push(this.rooms[i]);
-                }
-            }
+            this.warehouses = this.rooms.filter((v) => v.state === 'free' && v.id === 2);
+            this.maxFuel = this.rooms.filter((v) => v.id === 5).length * 500;
+            if (this.fuel > this.maxFuel) this.fuel = this.maxFuel;
             //ステータステキストの更新を行う
             this.fuelText.setText("FUEL:" + this.fuel + "/" + this.maxFuel);
             this.ojiText.setText("OJIs:" + this.ojis.length);
@@ -307,6 +285,8 @@ export class Ship extends PIXI.Container {
                     i--;
                 }
             }
+            //星の動作を行う
+            this.starManager.move(this);
             // ステージの動作を行う
             for (let i = 0; i < this.rooms.length; i++) {
                 this.rooms[i].move(this);
@@ -323,8 +303,18 @@ export class Ship extends PIXI.Container {
             //航海中の処理
             if (this.going) {
                 // アイテムを生成する
-                if (this.cnt % 20 == 0 && this.makableItem) {
-                    Ship.makeItem(this, this.w + 25, -800, Math.floor(Math.random() * 2) + 1, 1, 'out');
+                if (this.cnt % 100 == 0 && this.makableItem) {
+                    const dropItemList = Stage.stageInfo[this.distStageID].dropItemList;
+                    let p = 0;
+                    const rand = Math.random();
+                    for (let i = 0; i < dropItemList.length; i++) {
+                        p += dropItemList[i][1];
+                        if (p >= rand) {
+                            if (dropItemList[i][0] === 0) break;
+                            Ship.makeItem(this, Math.random() * 1500 - 500, -800, dropItemList[i][0], 1, 'out');
+                            break;
+                        }
+                    }
                 }
                 if (this.cnt % 30 == 0) {
                     this.mapPosition++;
@@ -340,14 +330,17 @@ export class Ship extends PIXI.Container {
                 }
             }
             //デバッグ用
-            if (this.cnt % 60 == 0) {
+            if (this.cnt % 300 == 0) {
+                for (let i = 0; i < 16; i++){
+                    Ship.makeItem(this, 0, 0, i+1, 1, "out");
+                }
                 const cX = app.renderer.plugins.interaction.mouse.global.x;
                 const cY = app.renderer.plugins.interaction.mouse.global.y;
                 if (cX > 0 && cY > 0 && cY < 500) {
                     for (let i = 0; i < this.freeOjis.length; i++) {
                         if (this.freeOjis[i].state === 'free') {
-                            this.freeOjis[i].tl.clear();
-                            this.freeOjis[i].tl.to(this.freeOjis[i], { duration: 1, x: cX, y: cY - 32 });
+                            //this.freeOjis[i].tl.clear();
+                            //this.freeOjis[i].tl.to(this.freeOjis[i], { duration: 1, x: cX, y: cY - 32 });
                         }
                     }
                 }

@@ -1,19 +1,15 @@
 import * as PIXI from "pixi.js";
 import gsap from "gsap";
-import { Button } from "./button";
 import { Ship } from "./ship";
 import { itemList, Room } from "./room";
-import { simpleWindow } from "./simpleWindow";
 import { MyText } from "./myText";
 import { Item } from "./item";
-import { TextWindow } from "./window";
 import { Stage } from "./stage";
+import { BackWindow } from "./backWindow";
 
-export class Map extends PIXI.Sprite {
+export class Map extends BackWindow {
     //sI color,x,y
     sI: number[][] = [[0xdddd33, 15, 15], [0xdddd33, 55, 15], [0xdddd33, 92, 51], [0xdddd33, 47, 82], [0xdddd33, 103, 103]];
-    backButton: Button;//戻るボタン
-    oneLayerTitleText: MyText;//マップ名テキスト
     ojisanIcon: PIXI.Sprite;//マップ選択アイコン
     map: PIXI.Sprite;//マップ
     mapCursor: PIXI.Sprite;//カーソル
@@ -22,7 +18,7 @@ export class Map extends PIXI.Sprite {
     sellingItems: Item[] = [];//売っているアイテムのアイコン
     distanceText: MyText;//消費燃料表示テキスト
     constructor(ship: Ship) {
-        super(PIXI.Loader.shared.resources.window.texture);
+        super(0,0,1,1,1,1,false);
         const tl = gsap.timeline();//タイムライン初期化
         this.selectMapId = 0;
         this.interactive = true;
@@ -30,13 +26,9 @@ export class Map extends PIXI.Sprite {
         this.zIndex = 100;//最前面表示
         this.alpha = 1;
         this.visible = false;
-        //戻るボタン作成
-        this.backButton = Room.makeBackButton(0, 0, this);
         //「クエスト一覧」テキスト作成
         this.addChild(new MyText("全体マップ", 150, 0, 1, 24, 32, 0x4545dd));
-        //マップ名テキスト作成
-        this.oneLayerTitleText = new MyText(Stage.stageInfo[0].name, 20, 37, 1, 24, 35, 0x333333);
-        this.addChild(this.oneLayerTitleText);
+        this.setContentText(Stage.stageInfo[0].name);//初期マップ名表示
         //売ってるアイテムアイコン作成
         for (let i = 0; i < 10; i++) {
             this.sellingItems.push(Room.makeDisplayItem(35 * (i + 1), 80, 1, this, false));
@@ -84,7 +76,7 @@ export class Map extends PIXI.Sprite {
         }
         this.mapCursor.on("pointertap", () => {
             const distance = Map.getDistanceOfMapToMap(ship.stageID, this.selectMapId);
-            if (distance != -1 && !ship.going) {//マップが繋がっている時
+            if (distance != -1 && !ship.going&&ship.fuel>0) {//マップが繋がっている時,燃料がある時
                 PIXI.Loader.shared.resources.letsGo.sound.play();//掛け声
                 this.visible = false;
                 this.distanceText.setText("");
@@ -112,7 +104,7 @@ export class Map extends PIXI.Sprite {
         return -1;
     }
     updateDisplay(currentStageID: number, selectStageID: number, fuel: number,going:boolean) {
-        this.oneLayerTitleText.setText(Stage.stageInfo[selectStageID].name);//選択ステージ名更新
+        this.setContentText(Stage.stageInfo[selectStageID].name);//選択ステージ名更新
         const distance = Map.getDistanceOfMapToMap(currentStageID, selectStageID);
         const resultFuel = fuel - distance;
         if (distance != -1&&!going) this.distanceText.setText("燃料:" + fuel + " >> " + resultFuel);
