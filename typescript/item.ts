@@ -13,7 +13,7 @@ interface itemInfo {
     name: string;//アイテムの名前
     sell: number;//アイテムの売値
 }
-export type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage' | 'display' | 'made';
+export type stringInOut = 'in' | 'out' | 'reserved' | 'transporting' | 'garbage' | 'display' | 'made'|'extracted';
 export class Item extends PIXI.TilingSprite {
     static itemInfo: itemInfo[] = [
         {
@@ -143,8 +143,14 @@ export class Item extends PIXI.TilingSprite {
             this.scale.set(Item.size);
         } else if (this.state === 'made') {
             this.state = 'reserved';
-            this.tl.from(this.scale, { duration: 1, x: 0.1, y: 0.1, ease: 'back.out(10)' });
-            this.tl.call(() => this.state = 'in');
+            this.tl.from(this.scale, { duration: 1, x: 0.1, y: 0.1, ease: 'back.out(10)' })
+                .call(() => this.state = 'in');
+        } else if (this.state === 'extracted') {
+            this.cnt++;
+            if (this.cnt > 60 * 20) {
+                this.state = 'in';
+                this.cnt = 0;
+            }
         }
     }
     // おじさんとアイテムをくっつける
@@ -190,7 +196,7 @@ export class Item extends PIXI.TilingSprite {
         for (let i = 0; i < warehouse.itemlist.length; i++) {
             if (warehouse.itemlist[i].id == item.id && warehouse.itemlist[i].num <= item.max - 1) {
                 if (warehouse.itemlist[i].num + item.num > item.max) {//アイテムがあふれた場合
-                    Ship.makeItem(ship, warehouse.x, warehouse.y, item.id, warehouse.itemlist[i].num + item.num - item.max, 'in');
+                    ship.makeItem(warehouse.x, warehouse.y, item.id, warehouse.itemlist[i].num + item.num - item.max, 'in');
                     warehouse.itemlist[i].num = item.max;
                 } else {//アイテムが溢れない場合
                     warehouse.itemlist[i].num += item.num;

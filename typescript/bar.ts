@@ -55,8 +55,7 @@ export class Bar extends BackWindow {
         //所持金表示テキスト作成
         this.moneyText = new MyText("", 160, 5, 0, 20, 32, 0xdddd33);
         this.addChild(this.moneyText);
-        //「クエスト一覧」テキスト作成
-        this.addChild(new MyText("小話一覧", 50, 0, 1, 24, 32, 0x333333));
+        this.setTitleText("酒場");
         //お金表示テキスト作成
         this.oneLayerMoneyText = new MyText("", 20, 37, 1, 24, 35, 0xffff33);
         this.addChild(this.oneLayerMoneyText);

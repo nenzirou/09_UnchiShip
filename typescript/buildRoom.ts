@@ -55,21 +55,24 @@ export class BuildRoom extends BackWindow {
         ship.addChild(this.clickCursor);
         //部屋を作るUI　第1層
         ship.gamescene.addChild(this);//ルーム作成第1ウィンドウを登録
+        this.setTitleText("建設");
         //第1層ウィンドウ内のテキスト設定
-        let roomNameText = new MyText("", 80, 70, 1, 26, 50, 0x333333);
+        let roomNameText = new MyText("", 80, 45, 1, 26, 50, 0x333333);
         roomNameText.setText('部屋破壊\n倉庫\nベッド\n作業場\nエンジン');
         this.addChild(roomNameText);
         //作成アイテムアイコンの挙動
         for (let i = 0; i < 5; i++) {
+            const roomID =Room.roomInfo[i + 1]
             //第１層ウィンドウに配置するルームアイコン
-            const displayRoom: PIXI.TilingSprite = new PIXI.TilingSprite(PIXI.Loader.shared.resources[Room.roomInfo[i + 1].texture].texture, 50, 50);
-            displayRoom.position.set(20 + Math.floor(i / 10) * 180, 50 * (i % 10) + 64);
+            const displayRoom: PIXI.TilingSprite = new PIXI.TilingSprite(PIXI.Loader.shared.resources[roomID.texture].texture, 50, 50);
+            displayRoom.position.set(20 + Math.floor(i / 10) * 180, 50 * (i % 10) + 35);
             displayRoom.interactive = true;
             displayRoom.buttonMode = true;
             this.addChild(displayRoom);
             this.makingRoomOneLayerItems.push(displayRoom);
             //第2層ウィンドウの設定
             const itemWindow: BackWindow = new BackWindow(0, 0, 1, 1, 1, 1, false);
+            itemWindow.setTitleText(roomID.name+"作成");
             this.addChild(itemWindow);
             this.makingRoomTwoLayerWindows.push(itemWindow);
             const itemlist: itemList[] = Room.roomInfo[i + 1].need;//itemList[]型がくる
@@ -106,7 +109,7 @@ export class BuildRoom extends BackWindow {
         //ルーム作成で部屋を作る場所を選ぶ時の処理
         if (this.selected) {
             this.removeChild(ship.rooms[(this.clickPosition.y / 50) * ship.rW + (this.clickPosition.x / 50)]);
-            ship.rooms[(this.clickPosition.y / 50) * ship.rW + (this.clickPosition.x / 50)] = Ship.makeRoom(this.clickPosition.x + 25, this.clickPosition.y + 25, this.makingRoomId, ship.gamescene, 'build');//部屋作成
+            ship.rooms[(this.clickPosition.y / 50) * ship.rW + (this.clickPosition.x / 50)] = ship.makeRoom(this.clickPosition.x + 25, this.clickPosition.y + 25, this.makingRoomId, ship.gamescene, 'build');//部屋作成
             ship.addChild(ship.rooms[(this.clickPosition.y / 50) * ship.rW + (this.clickPosition.x / 50)]);
             this.selected = false;
             ship.interactive = false;
@@ -124,7 +127,7 @@ export class BuildRoom extends BackWindow {
                     //必要素材の必要数を表示するテキストを設定
                     let needItemText = "必要素材\n";
                     for (let j = 0; j < itemlist.length; j++) {
-                        needItemText += "　 " + Item.itemInfo[itemlist[j].id].name + "×" + itemlist[j].num + "(" + Room.countItemNum(ship, itemlist[j].id, true) + ")\n";
+                        needItemText += "　 " + Item.itemInfo[itemlist[j].id].name + "×" + itemlist[j].num + "(" + ship.countItemNum(itemlist[j].id, true) + ")\n";
                     }
                     this.makingRoomTwoLayerWindows[i].setContentText(needItemText);
                 }

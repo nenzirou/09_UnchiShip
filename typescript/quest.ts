@@ -50,7 +50,7 @@ export class Quest extends BackWindow {
         this.interactive = true;
         this.sortableChildren = true;
         //「クエスト一覧」テキスト作成
-        this.addChild(new MyText("クエスト一覧", 100, 0, 1, 32, 32, 0x333333));
+        this.setTitleText("クエスト一覧");
         for (let i = 0; i < this.max; i++) {
             //入れ子ウィンドウ
             const twoLayerWindow = new BackWindow(0, 0, 5, 1, 1, 1, false);
@@ -103,7 +103,7 @@ export class Quest extends BackWindow {
             deliButton.on("pointertap", () => {
                 const needItemList = Quest.questInfo[this.quests[i]].needItemList;
                 const rewordItemList = Quest.questInfo[this.quests[i]].rewordItemList;
-                if (Room.countItemNum(ship, needItemList.id, false) >= needItemList.num) {//指定アイテムがあるSE
+                if (ship.countItemNum(needItemList.id, false) >= needItemList.num) {//指定アイテムがあるSE
                     PIXI.Loader.shared.resources.open.sound.play();
                     //アイテム納品処理
                     for (let j = 0; j < needItemList.num; j++) {
@@ -113,7 +113,7 @@ export class Quest extends BackWindow {
                     }
                     //アイテム入手処理
                     for (let j = 0; j < rewordItemList.length; j++) {
-                        Ship.makeItem(ship, 175 + Math.random() * 50, 175 + Math.random() * 50, rewordItemList[j].id, rewordItemList[j].num, 'made');
+                        ship.makeItem( 175 + Math.random() * 50, 175 + Math.random() * 50, rewordItemList[j].id, rewordItemList[j].num, 'made');
                     }
                     this.quests.splice(i, 1);
                     this.setQuestList(this.quests);
@@ -131,11 +131,11 @@ export class Quest extends BackWindow {
         if (this.visible) {
             for (let i = 0; i < this.max; i++) {
                 if (this.twoLayerWindows[i].visible) {
-                    this.twoLayerNeedItemTexts[i].setText(Item.itemInfo[Quest.questInfo[this.quests[i]].needItemList.id].name + "(" + Room.countItemNum(ship, Quest.questInfo[this.quests[i]].needItemList.id, false) + ")×" + Quest.questInfo[this.quests[i]].needItemList.num);//必要アイテム数設定
+                    this.twoLayerNeedItemTexts[i].setText(Item.itemInfo[Quest.questInfo[this.quests[i]].needItemList.id].name + "(" + ship.countItemNum(Quest.questInfo[this.quests[i]].needItemList.id, false) + ")×" + Quest.questInfo[this.quests[i]].needItemList.num);//必要アイテム数設定
                     let text = "";
                     for (let j = 0; j < 3; j++) {//報酬アイテム数表示
                         if (Quest.questInfo[this.quests[i]].rewordItemList.length > j) {
-                            text += Item.itemInfo[Quest.questInfo[this.quests[i]].rewordItemList[j].id].name + "(" + Room.countItemNum(ship, Quest.questInfo[this.quests[i]].rewordItemList[j].id, true) + ")×" + Quest.questInfo[this.quests[i]].rewordItemList[j].num + "\n";
+                            text += Item.itemInfo[Quest.questInfo[this.quests[i]].rewordItemList[j].id].name + "(" + ship.countItemNum(Quest.questInfo[this.quests[i]].rewordItemList[j].id, true) + ")×" + Quest.questInfo[this.quests[i]].rewordItemList[j].num + "\n";
                         }
                     }
                     this.twoLayerRewordItemTexts[i].setText(text);

@@ -31,7 +31,7 @@ shipに持たせる機能
 export class Ship extends PIXI.Container {
     //デバッグ用変数
     makableItem: boolean = true;//アイテムを生成するかどうか決定
-    ojiNum: number = 10;//おじさんの初期生成数
+    ojiNum: number = 15;//おじさんの初期生成数
     event: boolean = false;//イベントを発生させるかどうか
 
     eventFlags: boolean[] = new Array(200);//イベントフラグ
@@ -85,16 +85,16 @@ export class Ship extends PIXI.Container {
     buildRoom: BuildRoom;//部屋作成
 
     initialRoom: number[][] = [
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 2, 3, 4, 5, 0, 0],
-        [0, 0, 2, 2, 2, 2, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 4, 4, 4, 4, 1, 1],
+        [1, 1, 2, 3, 4, 5, 1, 1],
+        [1, 1, 2, 2, 2, 2, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1],
     ];
     constructor(x: number, y: number, width: number, height: number, gamescene: PIXI.Container) {
         super();
@@ -134,7 +134,7 @@ export class Ship extends PIXI.Container {
         this.rocket.visible = false;
         this.ship = new PIXI.TilingSprite(PIXI.Loader.shared.resources.ship.texture, 500, 600);
         this.ship.position.set(-50, -99);
-        this.addChild(this.rocket,this.ship);
+        this.addChild(this.rocket, this.ship);
         //メニューバー
         this.menu = new PIXI.Sprite(PIXI.Loader.shared.resources.menu.texture);
         this.menu.position.set(0, this.h);
@@ -229,14 +229,14 @@ export class Ship extends PIXI.Container {
         this.buildRoom = new BuildRoom(this);
         //ルーム作成ボタン
         this.makingRoomButton = new Button("建設", 100, 50, this.w - 100, 0, 5, 0x000000, 24, 1, true);
-        this.makingRoomButton.on('click', () => {//ルーム作成ボタンの挙動
+        this.makingRoomButton.on('pointertap', () => {//ルーム作成ボタンの挙動
             PIXI.Loader.shared.resources.open.sound.play();
             this.buildRoom.visible = true;
         });
         // 船の部屋生成
         for (let i = 0; i < this.rH; i++) {
             for (let j = 0; j < this.rW; j++) {
-                let room = Ship.makeRoom(j * 50 + 25, i * 50 + 25, this.initialRoom[i][j], gamescene, 'free');
+                let room = this.makeRoom(j * 50 + 25, i * 50 + 25, this.initialRoom[i][j], gamescene, 'free');
                 this.addChild(room);
                 this.rooms.push(room);
             }
@@ -247,7 +247,7 @@ export class Ship extends PIXI.Container {
             this.addChild(oji);
             this.ojis.push(oji);
         }
-        gamescene.addChild(this.menu,this.shop,this.quest,this.bar,this.map,this.buildRoom);
+        gamescene.addChild(this.menu, this.shop, this.quest, this.bar, this.map, this.buildRoom);
         this.menu.addChild(this.menuHider, this.fuelText, this.ojiText, this.calText, this.distanceDisplay, this.scaleUpButton, this.scaleDownButton, this.stopButton, this.shopButton, this.questButton, this.barButton, this.mapButton, this.makingRoomButton);
     }
 
@@ -289,7 +289,7 @@ export class Ship extends PIXI.Container {
             this.starManager.move(this);
             // ステージの動作を行う
             for (let i = 0; i < this.rooms.length; i++) {
-                this.rooms[i].move(this);
+                this.rooms[i].move();
             }
             // おじさんの動作を行う
             for (let i = 0; i < this.ojis.length; i++) {
@@ -311,7 +311,7 @@ export class Ship extends PIXI.Container {
                         p += dropItemList[i][1];
                         if (p >= rand) {
                             if (dropItemList[i][0] === 0) break;
-                            Ship.makeItem(this, Math.random() * 1500 - 500, -800, dropItemList[i][0], 1, 'out');
+                            this.makeItem(Math.random() * 1500 - 500, -800, dropItemList[i][0], 1, 'out');
                             break;
                         }
                     }
@@ -330,9 +330,9 @@ export class Ship extends PIXI.Container {
                 }
             }
             //デバッグ用
-            if (this.cnt % 300 == 0) {
-                for (let i = 0; i < 16; i++){
-                    Ship.makeItem(this, 0, 0, i+1, 1, "out");
+            if (this.cnt % 600 == 0) {
+                for (let i = 0; i < 6; i++) {
+                    this.makeItem(0, 0, i + 1, 1, "out");
                 }
                 const cX = app.renderer.plugins.interaction.mouse.global.x;
                 const cY = app.renderer.plugins.interaction.mouse.global.y;
@@ -350,35 +350,64 @@ export class Ship extends PIXI.Container {
     }
 
     //アイテムを生成する
-    static makeItem(ship: Ship, x: number, y: number, id: number, num: number, state: stringInOut) {
+    makeItem(x: number, y: number, id: number, num: number, state: stringInOut) {
         const item = new Item(x, y, id, num, state);
         if (item.num > item.max) item.num = item.max;
-        ship.addChild(item);
-        ship.items.push(item);
+        this.addChild(item);
+        this.items.push(item);
+        return item;
     }
     //部屋を生成する
-    static makeRoom(x: number, y: number, id: number, gamescene: PIXI.Container, state: stringRoomState) {
+    makeRoom(x: number, y: number, id: number, gamescene: PIXI.Container, state: stringRoomState) {
         let room: Room;
         switch (id) {
             case 0: {
-                room = new Room_wall(x, y, gamescene, state); break;
+                room = new Room_wall(this, x, y, gamescene, state); break;
             }
             case 1: {
-                room = new Room_aisle(x, y, gamescene, state); break;
+                room = new Room_aisle(this, x, y, gamescene, state); break;
             }
             case 2: {
-                room = new Room_warehouse(x, y, gamescene, state); break;
+                room = new Room_warehouse(this, x, y, gamescene, state); break;
             }
             case 3: {
-                room = new Room_bed(x, y, gamescene, state); break;
+                room = new Room_bed(this, x, y, gamescene, state); break;
             }
             case 4: {
-                room = new Room_work(x, y, gamescene, state); break;
+                room = new Room_work(this, x, y, gamescene, state); break;
             }
             case 5: {
-                room = new Room_engine(x, y, gamescene, state); break;
+                room = new Room_engine(this, x, y, gamescene, state); break;
             }
         }
         return room;
+    }
+    //idとstateから部屋を探す
+    findRoom(id: number, state: stringRoomState) {
+        for (let i = 0; i < this.rooms.length; i++) {
+            if (this.rooms[i].id === id && this.rooms[i].state === state) {
+                return this.rooms[i];
+            }
+        }
+    }
+    //全倉庫にある指定したアイテムの個数を調べる
+    countItemNum(id: number, inItemCount: boolean) {
+        let sum = 0;
+        //倉庫の中のアイテム
+        for (let i = 0; i < this.warehouses.length; i++) {
+            for (let j = 0; j < this.warehouses[i].itemlist.length; j++) {
+                if (this.warehouses[i].itemlist[j].id == id) {
+                    sum += this.warehouses[i].itemlist[j].num;
+                }
+            }
+        }
+        //船の中のアイテム
+        if (inItemCount) {
+            for (let i = 0; i < this.items.length; i++) {
+                const item = this.items[i];
+                if (item.id === id && item.state !== 'garbage' && item.state !== 'out' && item.state !== 'display') sum += item.num;
+            }
+        }
+        return sum;
     }
 }

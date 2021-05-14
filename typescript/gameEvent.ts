@@ -43,8 +43,8 @@ export class GameEvent {
             if (this.mode == 13) {//倉庫のアイテムを持ってきてしまった
                 this.background.visible = false;
                 this.cnt = 0;
-                for (let i = 0; i < 3; i++) Ship.makeItem(ship, 200, 200, 7, 1, "made");
-                for (let i = 0; i < 2; i++) Ship.makeItem(ship, 232, 200, 8, 1, "made");
+                for (let i = 0; i < 3; i++) ship.makeItem( 200, 200, 7, 1, "made");
+                for (let i = 0; i < 2; i++) ship.makeItem( 232, 200, 8, 1, "made");
                 this.mode = 14;
             } else if (this.mode == 14) {
                 if (this.cnt > 120) this.mode = 15;
@@ -65,8 +65,8 @@ export class GameEvent {
             if (this.mode == 23) {//ベッドの素材持ってきた
                 this.background.visible = false;
                 this.cnt = 0;
-                Ship.makeItem(ship, 200, 200, 17, 1, "made");
-                Ship.makeItem(ship, 232, 200, 16, 1, "made");
+                ship.makeItem( 200, 200, 17, 1, "made");
+                ship.makeItem( 232, 200, 16, 1, "made");
                 this.mode = 24;
             } else if (this.mode == 24) {
                 if (this.cnt > 120) this.mode = 25;
@@ -90,8 +90,8 @@ export class GameEvent {
             if (this.mode == 34) {
                 this.background.visible = false;
                 this.cnt = 0;
-                Ship.makeItem(ship, 200, 200, 18, 1, "made");
-                Ship.makeItem(ship, 232, 200, 19, 1, "made");
+                ship.makeItem( 200, 200, 18, 1, "made");
+                ship.makeItem( 232, 200, 19, 1, "made");
                 this.mode = 35;
             } else if (this.mode == 35) {
                 if (this.cnt > 120) this.mode = 36;

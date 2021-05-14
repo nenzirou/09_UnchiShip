@@ -74,7 +74,7 @@ export class Ojisan extends PIXI.TilingSprite {
             }
             // 就寝
             if (this.fatigue > 90) {
-                let bed: Room = Room.findRoom(ship, 3, 'free');
+                let bed: Room = ship.findRoom( 3, 'free');
                 if (bed !== undefined) {
                     let ojiToBed = Room.len(this.x, this.y, bed.x, bed.y);
                     this.state = 'moving';

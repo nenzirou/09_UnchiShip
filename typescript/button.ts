@@ -18,7 +18,6 @@ export class Button extends PIXI.Container {
         backColor.interactive = touch; // クリック可能にする
         backColor.buttonMode = touch;//クリック可能なマウスカーソルにする
         this.addChild(backColor); // 背景をボタンコンテナに追加
-
         // テキストに関するパラメータを定義する(ここで定義した意外にもたくさんパラメータがある)
         const textStyle = new PIXI.TextStyle({
             fontFamily: "Arial", // フォント

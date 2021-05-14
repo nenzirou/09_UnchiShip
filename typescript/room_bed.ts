@@ -5,12 +5,11 @@ import { Ship } from "./ship";
 ベッドルーム
 */
 export class Room_bed extends Room {
-    constructor(x: number, y: number, gamescene: PIXI.Container, state) {
-        super(3, x, y, PIXI.Loader.shared.resources.room_bed.texture, gamescene, state);
+    constructor(ship:Ship,x: number, y: number, gamescene: PIXI.Container, state) {
+        super(ship,3, x, y, PIXI.Loader.shared.resources.room_bed.texture, gamescene, state);
     }
-    move(ship: Ship) {
-        this.buildRoom(ship);//部屋を立ててくれる関数
-        this.gatherNeedItem(ship);//必要なアイテムを自動で集めてくれる関数
+    move() {
+        this.world();
         if (this.build) {
             if (this.ojiID.length < this.ojiMax) {
                 this.state = 'free';

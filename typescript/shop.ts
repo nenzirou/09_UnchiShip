@@ -36,8 +36,9 @@ export class Shop extends BackWindow {
         this.interactive = true;
         this.alpha = 0.8;
         //所持金表示テキスト作成
-        this.moneyText = new MyText("", 100, 5, 0, 20, 32, 0xdddd33);
+        this.moneyText = new MyText("", 150, 5, 0, 20, 32, 0xdddd33);
         this.addChild(this.moneyText);
+        this.setTitleText("お店");
         //                                      購入部品設定                                        //
         this.buyingWindow = new simpleWindow(360, 500, 20, 32, 0, 0xdd9999, 0.6, true);//購入ウィンドウ
         this.addChild(this.buyingWindow);
@@ -60,7 +61,7 @@ export class Shop extends BackWindow {
             buyingButton.on('pointertap', () => {
                 if (ship.money >= this.buyingList[i][1]) {
                     PIXI.Loader.shared.resources.shop.sound.play();
-                    Ship.makeItem(ship, 200, 200, this.buyingList[i][0], 1, 'made');
+                    ship.makeItem(200, 200, this.buyingList[i][0], 1, 'made');
                     ship.money -= this.buyingList[i][1];
                 } else {
                     PIXI.Loader.shared.resources.nSelect.sound.play();
@@ -163,7 +164,7 @@ export class Shop extends BackWindow {
             for (let i = 0; i < this.buyingMax; i++) {
                 if (i < this.buyingList.length) {//商品情報設定
                     const id = this.buyingList[i][0];
-                    productName += Item.itemInfo[id].name + '(' + Room.countItemNum(ship, id, true) + ')\n';
+                    productName += Item.itemInfo[id].name + '(' + ship.countItemNum(id, true) + ')\n';
                     productMoney += this.buyingList[i][1] + 'G\n';
                 } else {
                     break;
@@ -179,7 +180,7 @@ export class Shop extends BackWindow {
             this.sellingProductSum = [];
             for (let i = 0; i < this.sellingMax; i++) {
                 const id = this.sellingList[i][0];
-                const sum = Room.countItemNum(ship, id, false);
+                const sum = ship.countItemNum(id, false);
                 this.sellingProductSum.push(sum);
                 productName += Item.itemInfo[id].name + '(' + sum + ')\n';
                 productMoney += this.sellingList[i][1] + 'G\n';
